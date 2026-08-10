@@ -1,0 +1,766 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0f2233" />
+<title>Tailings Dam Platform — Pilot Prototype</title>
+<style>
+  :root{
+    --bg:#0b1a26; --panel:#0f2233; --panel-2:#13293b;
+    --line:#1f3a4f; --ink:#eaf2f8; --ink-dim:#9db3c4; --ink-mute:#6f8598;
+    --green:#2ecc71; --green-bg:#123726; --amber:#f4b740; --amber-bg:#3a2e10;
+    --red:#ff5a5a; --red-bg:#3a1717; --blue:#4aa3ff; --blue-bg:#0f2b45;
+    --accent:#37c2b8;
+    --radius:14px; --shadow:0 6px 20px rgba(0,0,0,.35);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#05101a;color:var(--ink);-webkit-font-smoothing:antialiased}
+  /* phone frame */
+  .device{max-width:430px;margin:0 auto;min-height:100vh;background:var(--bg);
+    display:flex;flex-direction:column;position:relative;box-shadow:0 0 60px rgba(0,0,0,.6)}
+  header.appbar{position:sticky;top:0;z-index:20;background:linear-gradient(180deg,#0f2233,#0c1c2b);
+    padding:14px 16px calc(12px) 16px;border-bottom:1px solid var(--line)}
+  .appbar .row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .appbar h1{font-size:16px;margin:0;font-weight:650;letter-spacing:.2px}
+  .appbar .sub{color:var(--ink-dim);font-size:12px;margin-top:2px}
+  .net{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--ink-dim);
+    background:#0a1722;border:1px solid var(--line);padding:5px 9px;border-radius:999px;cursor:pointer;user-select:none}
+  .net .dot{width:8px;height:8px;border-radius:50%;background:var(--green)}
+  .net.offline .dot{background:var(--amber)}
+  .net.offline{color:var(--amber)}
+  main{flex:1;overflow-y:auto;padding:14px 14px 90px 14px}
+  /* nav */
+  nav.tabbar{position:sticky;bottom:0;z-index:20;display:grid;grid-template-columns:repeat(5,1fr);
+    background:#0a1826;border-top:1px solid var(--line)}
+  nav.tabbar button{background:none;border:0;color:var(--ink-mute);padding:9px 2px 12px;font-size:10.5px;
+    display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;font-weight:600}
+  nav.tabbar button .ic{font-size:19px;line-height:1}
+  nav.tabbar button.active{color:var(--accent)}
+  /* cards */
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    padding:15px;margin-bottom:12px;box-shadow:var(--shadow)}
+  .card h2{font-size:13px;margin:0 0 4px;font-weight:650;letter-spacing:.3px;text-transform:uppercase;color:var(--ink-dim)}
+  .card h3{font-size:15px;margin:0 0 8px;font-weight:650}
+  .muted{color:var(--ink-dim)} .mute{color:var(--ink-mute)}
+  .small{font-size:12px} .tiny{font-size:11px}
+  /* adherence hero */
+  .hero{background:linear-gradient(160deg,#13324a,#0d2233);border:1px solid #23506e}
+  .adh{display:flex;align-items:flex-end;gap:10px;margin:2px 0 6px}
+  .adh .big{font-size:44px;font-weight:750;line-height:.9;letter-spacing:-1px}
+  .adh .of{font-size:15px;color:var(--ink-dim);padding-bottom:5px}
+  .bar{height:9px;border-radius:999px;background:#0a1a27;overflow:hidden;margin-top:6px}
+  .bar > i{display:block;height:100%;background:linear-gradient(90deg,var(--green),#27e0a0)}
+  /* status pill */
+  .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;
+    font-size:12px;font-weight:650;border:1px solid transparent}
+  .pill .dot{width:8px;height:8px;border-radius:50%}
+  .pill.green{background:var(--green-bg);color:#7ce7a8;border-color:#1c5a3a}.pill.green .dot{background:var(--green)}
+  .pill.amber{background:var(--amber-bg);color:#f7ce77;border-color:#5a4713}.pill.amber .dot{background:var(--amber)}
+  .pill.red{background:var(--red-bg);color:#ff9a9a;border-color:#5a2020}.pill.red .dot{background:var(--red)}
+  .pill.blue{background:var(--blue-bg);color:#9ccdff;border-color:#1d466b}.pill.blue .dot{background:var(--blue)}
+  /* list rows */
+  .rowitem{display:flex;align-items:center;gap:12px;padding:12px 4px;border-top:1px solid var(--line)}
+  .rowitem:first-of-type{border-top:0}
+  .rowitem .grow{flex:1;min-width:0}
+  .rowitem .t{font-weight:600;font-size:14px}
+  .rowitem .s{font-size:12px;color:var(--ink-dim);margin-top:2px}
+  .chev{color:var(--ink-mute);font-size:18px}
+  /* buttons */
+  .btn{display:block;width:100%;text-align:center;padding:14px;border-radius:12px;border:0;
+    font-size:15px;font-weight:700;cursor:pointer;background:var(--accent);color:#03201d}
+  .btn.secondary{background:#12293b;color:var(--ink);border:1px solid var(--line)}
+  .btn.ghost{background:transparent;color:var(--blue);border:1px solid #1d466b}
+  .btn.danger{background:var(--red-bg);color:#ff9a9a;border:1px solid #5a2020}
+  .btn.big{padding:16px;font-size:16px}
+  .btn:active{transform:translateY(1px)}
+  .btnrow{display:flex;gap:10px;margin-top:6px}.btnrow .btn{margin:0}
+  /* category cards (inspection) */
+  .cat{border:1px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:hidden;background:var(--panel-2)}
+  .cat .head{display:flex;align-items:center;gap:12px;padding:14px}
+  .cat .head .ic{font-size:22px;width:26px;text-align:center}
+  .cat .head .grow{flex:1}
+  .cat .head .name{font-weight:650;font-size:15px}
+  .cat .head .meta{font-size:11.5px;color:var(--ink-mute);margin-top:2px}
+  .toggle{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;font-size:12px;font-weight:700}
+  .toggle button{background:#0c1c2a;color:var(--ink-mute);border:0;padding:8px 12px;cursor:pointer}
+  .toggle button.on-normal{background:var(--green-bg);color:#7ce7a8}
+  .toggle button.on-flag{background:var(--amber-bg);color:#f7ce77}
+  .params{padding:0 14px 14px;display:none;border-top:1px dashed var(--line)}
+  .cat.flagged .params{display:block}
+  .cat.flagged{border-color:#5a4713}
+  .param{padding:12px 0;border-top:1px solid var(--line)}
+  .param:first-child{border-top:0}
+  .param .pn{font-weight:600;font-size:13.5px;margin-bottom:8px}
+  .scale{display:flex;gap:6px;flex-wrap:wrap}
+  .scale button{flex:1;min-width:64px;background:#0c1c2a;border:1px solid var(--line);color:var(--ink-dim);
+    padding:9px 6px;border-radius:9px;font-size:12px;font-weight:600;cursor:pointer}
+  .scale button.sel{background:var(--blue-bg);border-color:#2b6aa3;color:#cfe6ff}
+  .scale button.sel.warn{background:var(--amber-bg);border-color:#5a4713;color:#f7ce77}
+  .scale button.sel.bad{background:var(--red-bg);border-color:#5a2020;color:#ff9a9a}
+  .photo{display:flex;gap:8px;margin-top:10px;align-items:center}
+  .photo .cam{flex:1;border:1px dashed #2b6aa3;background:#0c2033;color:#9ccdff;border-radius:9px;
+    padding:12px;text-align:center;font-size:12.5px;font-weight:600;cursor:pointer}
+  .photo .prev{width:64px;height:64px;border-radius:9px;background:#0a1722 center/cover;
+    border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--ink-mute);text-align:center;padding:4px}
+  .note{width:100%;background:#0a1722;border:1px solid var(--line);color:var(--ink);border-radius:9px;
+    padding:9px;font-size:13px;margin-top:8px;font-family:inherit;resize:vertical}
+  /* banners */
+  .banner{border-radius:12px;padding:12px 13px;font-size:12.5px;line-height:1.5;margin-bottom:12px;border:1px solid}
+  .banner.warn{background:var(--amber-bg);border-color:#5a4713;color:#f7ce77}
+  .banner.info{background:var(--blue-bg);border-color:#1d466b;color:#bcd8f5}
+  .banner.crit{background:var(--red-bg);border-color:#5a2020;color:#ffb0b0}
+  .banner b{color:#fff}
+  /* ledger */
+  .evt{display:flex;gap:11px;padding:12px 2px;border-top:1px solid var(--line)}
+  .evt:first-child{border-top:0}
+  .evt .ic{width:30px;height:30px;border-radius:8px;background:#0c2033;display:flex;align-items:center;
+    justify-content:center;font-size:15px;flex:none}
+  .evt .grow{flex:1;min-width:0}
+  .evt .et{font-size:13.5px;font-weight:600}
+  .evt .em{font-size:11.5px;color:var(--ink-dim);margin-top:2px;line-height:1.4}
+  .evt .hash{font-size:10px;color:var(--ink-mute);font-family:ui-monospace,Menlo,monospace;margin-top:3px;word-break:break-all}
+  .kv{display:flex;justify-content:space-between;padding:9px 0;border-top:1px solid var(--line);font-size:13.5px}
+  .kv:first-child{border-top:0}.kv .k{color:var(--ink-dim)} .kv .v{font-weight:600;text-align:right}
+  /* timeline chart (M05 cross-validation) */
+  .chart{background:#0a1722;border:1px solid var(--line);border-radius:10px;padding:10px}
+  .legend{display:flex;gap:14px;margin-top:8px;font-size:11px;color:var(--ink-dim);flex-wrap:wrap}
+  .legend span{display:inline-flex;align-items:center;gap:5px}
+  .legend i{width:14px;height:3px;border-radius:2px;display:inline-block}
+  /* modal */
+  .scrim{position:fixed;inset:0;background:rgba(2,8,14,.66);display:flex;align-items:flex-end;
+    justify-content:center;z-index:50;padding:0}
+  .sheet{background:var(--panel);width:100%;max-width:430px;border-radius:18px 18px 0 0;
+    border:1px solid var(--line);border-bottom:0;padding:18px 16px calc(20px);animation:up .22s ease}
+  @keyframes up{from{transform:translateY(30px);opacity:.4}to{transform:translateY(0);opacity:1}}
+  .sheet h3{margin:0 0 6px;font-size:17px}
+  .grabber{width:40px;height:4px;border-radius:999px;background:#2a465c;margin:0 auto 12px}
+  .flash{position:fixed;left:50%;transform:translateX(-50%);bottom:96px;z-index:60;background:#0c2b24;
+    color:#8ff0cf;border:1px solid #1c5a3a;padding:11px 15px;border-radius:11px;font-size:13px;font-weight:600;
+    box-shadow:var(--shadow);max-width:400px;text-align:center;opacity:0;transition:opacity .2s,transform .2s}
+  .flash.show{opacity:1}
+  .divider{height:1px;background:var(--line);margin:14px 0}
+  .tag{font-size:10px;font-weight:700;letter-spacing:.4px;color:var(--ink-mute);text-transform:uppercase}
+  a.link{color:var(--blue);text-decoration:none;font-weight:600}
+</style>
+</head>
+<body>
+<div class="device">
+  <header class="appbar">
+    <div class="row">
+      <div>
+        <h1 id="appTitle">Impala Dam 4</h1>
+        <div class="sub" id="appSub">Routine inspection · SHEQ manager view</div>
+      </div>
+      <div class="net" id="netBtn" title="Tap to simulate losing signal">
+        <span class="dot"></span><span id="netTxt">Online</span>
+      </div>
+    </div>
+  </header>
+
+  <main id="view"><!-- rendered --></main>
+
+  <nav class="tabbar" id="tabbar">
+    <button data-tab="home" class="active"><span class="ic">🏠</span>Home</button>
+    <button data-tab="inspect"><span class="ic">📝</span>Inspect</button>
+    <button data-tab="water"><span class="ic">💧</span>Water</button>
+    <button data-tab="ledger"><span class="ic">🔒</span>Ledger</button>
+    <button data-tab="facility"><span class="ic">🏭</span>Facility</button>
+  </nav>
+</div>
+
+<script>
+/* ============================================================================
+   Tailings Dam Platform — clickable prototype
+   Front-end only, no build step, works offline (static). Demonstrates the
+   Phase-1 pilot's centre of gravity: schedule adherence (home), the progressive
+   offline inspection flow (M03b), the water/freeboard analytic surfaced for a
+   SHEQ manager (M05), and the append-only evidence ledger (M14).
+   Data is in-memory and resets on reload — this is a demo, not the product.
+   ============================================================================ */
+
+const state = {
+  tab: 'home',
+  online: true,
+  ledger: [],          // append-only, hash-chained (M14)
+  inspection: null,    // in-progress inspection (M03b)
+  submitted: [],       // completed inspections — enables the amendment flow
+  modal: null,
+};
+
+/* ---- Facility registry (M01), seeded like the site docs would ---- */
+const facility = {
+  name: 'Impala Dam 4',
+  operator: 'Reference Platinum Operations',
+  construction: 'Upstream',
+  storage: 'Slurry (conventional)',
+  consequence: 'High',
+  phase: 'Operation',
+  eor: 'T. Molefe (Engineer of Record)',
+  re: 'A. Naicker (Responsible Executive)',
+  sheq: 'You (SHEQ manager)',
+  freeboard: {           // the STACK, not a number (ADR 0002)
+    operational_m: 2.4, min_required_m: 0.8, status: 'green'
+  }
+};
+
+/* ---- Schedule adherence (M05→ projection over the inspection plan) ---- */
+const schedule = {
+  weekDone: 3, weekTotal: 4, weekRatePct: 75,
+  items: [
+    {level:'Routine — East wall', due:'Today', state:'due', freq:'Weekly'},
+    {level:'Routine — Decant & pond', due:'Today', state:'due', freq:'Weekly'},
+    {level:'Routine — West wall', due:'2 days ago', state:'overdue', freq:'Weekly'},
+    {level:'Intermediate — Full facility', due:'in 9 days', state:'scheduled', freq:'Monthly'},
+  ]
+};
+
+/* ---- Facility status tiles (plain language, colour state; number one tap away) ---- */
+const statuses = [
+  {key:'freeboard', label:'Freeboard', plain:'Within design envelope', state:'green',
+   detail:'Operational freeboard 2.4 m (crest to tailings). Above the 0.8 m minimum decant level and below max operational. ±0.15 m.'},
+  {key:'pond', label:'Pond position', plain:'Holding steady, clear of the wall', state:'green',
+   detail:'Pond centroid 214 m from nearest perimeter wall. No migration trend over the last 6 scenes.'},
+  {key:'seepage', label:'Seepage', plain:'A new damp patch was flagged last round', state:'amber',
+   detail:'West wall toe: new seepage area logged 3 days ago, clarity "slightly turbid". Awaiting Engineer of Record review.'},
+  {key:'instr', label:'Instrumentation', plain:'One piezometer offline', state:'amber',
+   detail:'P-07 (west wall) has not reported for 5 days. Monitoring coverage on the west wall is reduced — the system itself is an inspected object.'},
+];
+
+/* ---- Inspection taxonomy (7 categories, ~progressive) — M03b ---- */
+const taxonomy = [
+  {key:'tailings', icon:'🌊', name:'Tailings surface',
+   params:['Pond size & position','Reservoir level & freeboard','Beach slopes','Persistent vortex']},
+  {key:'embankment', icon:'🏔️', name:'Embankment / berms',
+   params:['Cracking','Bulging at toe','Weeping','Piping','Sloughing','Subsidence','Sinkholes','Surface / wave erosion']},
+  {key:'seepage', icon:'💧', name:'Seepage flow', colour:true,
+   params:['New or changed seepage areas','Colour of seepage water','Clarity of flowing water','Quantity & location']},
+  {key:'ancillary', icon:'🛠️', name:'Ancillary infrastructure',
+   params:['Decant integrity & access','Concrete cracking','Pump & pipeline condition','Drainage clogging']},
+  {key:'emergency', icon:'🚨', name:'Emergency preparedness',
+   params:['Leak detection status','Automatic flow measurement','Fault alarm status']},
+  {key:'instrumentation', icon:'📡', name:'Instrumentation',
+   params:['Station water levels','Instrument condition & data quality']},
+  {key:'misc', icon:'🦫', name:'Miscellaneous',
+   params:['Animal burrows']},
+];
+
+/* Ordered inspection points from M01 geometry — route guidance (§4.3),
+   so nothing is missed and the round has a defined end. */
+const route = ['Decant tower','West wall toe','Crest — west','Crest — east','Beach & pond edge','Instrument line P-01…P-07'];
+
+/* Previous round values — smart defaults: pre-fill, user confirms or changes (§4.3). */
+const previousRound = {
+  seepage: {'Colour of seepage water':1, 'Clarity of flowing water':1},
+  instrumentation: {'Instrument condition & data quality':1},
+};
+
+/* =========================== hashing (M14) =========================== */
+async function sha256(str){
+  // Prefer real SHA-256; fall back to a simple hash where crypto.subtle is
+  // unavailable (e.g. opening the file directly over file://) so the demo
+  // never breaks. The chain is illustrative either way.
+  if(window.crypto && crypto.subtle){
+    try{
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+      return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
+    }catch(e){/* fall through */}
+  }
+  let h1=0x811c9dc5, h2=0xc9dc5118;
+  for(let i=0;i<str.length;i++){ const c=str.charCodeAt(i);
+    h1=Math.imul(h1^c,0x01000193); h2=Math.imul(h2^c,0x85ebca77); }
+  const hx=n=>(n>>>0).toString(16).padStart(8,'0');
+  return (hx(h1)+hx(h2)+hx(h1^h2)+hx(Math.imul(h1,31)^h2)).slice(0,64).padEnd(64,'0');
+}
+async function appendEvent(type, summary, payload){
+  const prev = state.ledger[0];
+  const prevHash = prev ? prev.hash : '0'.repeat(64);
+  const occurred = new Date();
+  const base = JSON.stringify({type, summary, payload, prevHash, t: occurred.toISOString()});
+  const hash = await sha256(base);
+  state.ledger.unshift({
+    type, summary, payload, prevHash, hash,
+    actor: 'SHEQ manager', at: occurred, offline: !state.online
+  });
+}
+const evIcon = {
+  inspection_submitted:'📝', inspection_amended:'✏️', photo_captured:'📷',
+  analytic_published:'💧', threshold_changed:'🎚️', alert_raised:'🚨',
+  alert_acknowledged:'👁️', alert_dismissed:'🚫', instrument_relocated:'📍',
+  role_reassigned:'👤', escalation:'⤴️'
+};
+
+/* =========================== helpers =========================== */
+const $ = sel => document.querySelector(sel);
+function h(html){ const t=document.createElement('template'); t.innerHTML=html.trim(); return t.content.firstChild; }
+function fmtTime(d){ return d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}); }
+function flash(msg){
+  let f = $('.flash'); if(!f){ f=h('<div class="flash"></div>'); document.body.appendChild(f); }
+  f.textContent = msg; requestAnimationFrame(()=>f.classList.add('show'));
+  clearTimeout(f._t); f._t=setTimeout(()=>f.classList.remove('show'), 2400);
+}
+function stateWord(s){ return {green:'Normal', amber:'Attention', red:'Action needed'}[s]||s; }
+
+/* =========================== render: HOME =========================== */
+function renderHome(){
+  const v = $('#view'); v.innerHTML='';
+  const overdue = schedule.items.filter(i=>i.state==='overdue').length;
+
+  if(overdue){
+    v.appendChild(h(`<div class="banner crit">⚠️ <b>${overdue} inspection overdue.</b> Overdue rounds
+      escalate to you, then to the Responsible Executive. Complete or reassign the West wall round.</div>`));
+  }
+
+  // Adherence hero — the headline the pilot is judged on
+  v.appendChild(h(`
+    <div class="card hero">
+      <h2>This week's adherence</h2>
+      <div class="adh">
+        <span class="big">${schedule.weekDone}</span>
+        <span class="of">of ${schedule.weekTotal} inspections completed</span>
+      </div>
+      <div class="bar"><i style="width:${schedule.weekRatePct}%"></i></div>
+      <div class="small muted" style="margin-top:8px">${schedule.weekRatePct}% on schedule · baseline from historic records was <b style="color:#f7ce77">48%</b></div>
+    </div>`));
+
+  // Due / overdue list
+  const list = h(`<div class="card"><h2>Inspection schedule</h2></div>`);
+  schedule.items.forEach(i=>{
+    const pill = i.state==='overdue' ? 'red' : i.state==='due' ? 'amber' : 'blue';
+    const word = i.state==='overdue'?'Overdue':i.state==='due'?'Due now':'Scheduled';
+    const row = h(`
+      <div class="rowitem">
+        <div class="grow">
+          <div class="t">${i.level}</div>
+          <div class="s">${i.freq} · ${i.due}</div>
+        </div>
+        <span class="pill ${pill}"><span class="dot"></span>${word}</span>
+        <span class="chev">›</span>
+      </div>`);
+    row.onclick = ()=>{ state.tab='inspect'; startInspection(i.level); syncTabs(); render(); };
+    list.appendChild(row);
+  });
+  v.appendChild(list);
+
+  // Status tiles — plain language + colour, number one tap away
+  const st = h(`<div class="card"><h2>Facility status</h2>
+    <div class="tiny mute" style="margin-bottom:8px">Plain-language status. Tap any item for the underlying number and its uncertainty.</div></div>`);
+  statuses.forEach(s=>{
+    const row = h(`
+      <div class="rowitem">
+        <span class="pill ${s.state}"><span class="dot"></span>${stateWord(s.state)}</span>
+        <div class="grow">
+          <div class="t">${s.label}</div>
+          <div class="s">${s.plain}</div>
+        </div>
+        <span class="chev">›</span>
+      </div>`);
+    row.onclick = ()=>openStatus(s);
+    st.appendChild(row);
+  });
+  v.appendChild(st);
+
+  // Recent inspections — entry point for the amendment flow (no silent edits)
+  if(state.submitted.length){
+    const rc = h(`<div class="card"><h2>Recent inspections</h2>
+      <div class="tiny mute" style="margin-bottom:6px">Submitted rounds are locked. Corrections create an amendment record — they never overwrite.</div></div>`);
+    state.submitted.slice(0,4).forEach(s=>{
+      const row = h(`<div class="rowitem">
+        <div class="grow">
+          <div class="t">${s.id} · ${s.level}</div>
+          <div class="s">${s.at.toLocaleDateString([], {day:'numeric',month:'short'})} · ${s.flagged.length?`<span style="color:#f7ce77">${s.flagged.length} flagged</span>`:'all normal'}${s.amendments?` · ${s.amendments} amendment${s.amendments>1?'s':''}`:''}</div>
+        </div>
+        <span class="pill blue" style="padding:3px 9px">Amend</span>
+        <span class="chev">›</span>
+      </div>`);
+      row.onclick = ()=>amendInspection(s);
+      rc.appendChild(row);
+    });
+    v.appendChild(rc);
+  }
+
+  v.appendChild(h(`<button class="btn big" id="startBtn">Start today's inspection round</button>`));
+  $('#startBtn').onclick = ()=>{ state.tab='inspect'; startInspection('Routine — East wall'); syncTabs(); render(); };
+}
+
+function openStatus(s){
+  openSheet(`
+    <h3>${s.label}</h3>
+    <div style="margin:2px 0 12px"><span class="pill ${s.state}"><span class="dot"></span>${stateWord(s.state)}</span></div>
+    <p class="small" style="line-height:1.55;color:#cfe0ee">${s.detail}</p>
+    ${s.state!=='green' ? `
+      <div class="banner info" style="margin:6px 0 12px">Acknowledging an alert records that you have <b>seen</b> it.
+      It is <b>not</b> a determination that the condition is safe — that stays with the Engineer of Record.</div>
+      <div class="btnrow">
+        <button class="btn secondary" id="ackBtn">Acknowledge</button>
+        <button class="btn" id="escBtn">Escalate to EoR</button>
+      </div>` : `<button class="btn secondary" id="okBtn">Close</button>`}
+  `);
+  if(s.state==='green'){ $('#okBtn').onclick=closeSheet; return; }
+  $('#ackBtn').onclick = async ()=>{
+    await appendEvent('alert_acknowledged', `${s.label} alert acknowledged`, {status:s.key, note:'Seen — not cleared'});
+    closeSheet(); flash('Acknowledged and logged (not a safety clearance)');
+  };
+  $('#escBtn').onclick = ()=>escalate(s.label);
+}
+
+function escalate(subject){
+  openSheet(`
+    <h3>Escalate to Engineer of Record</h3>
+    <p class="small muted" style="line-height:1.5">Routing <b style="color:#fff">${subject}</b> to
+    <b style="color:#fff">${facility.eor}</b>. This is one tap and is permanently logged — it records that the
+    condition was passed to the competent person, and when.</p>
+    <textarea class="note" id="escNote" rows="3" placeholder="Optional context for the engineer…"></textarea>
+    <div class="btnrow" style="margin-top:12px">
+      <button class="btn secondary" id="escCancel">Cancel</button>
+      <button class="btn" id="escSend">Send to ${facility.eor.split(' ')[0]}</button>
+    </div>`);
+  $('#escCancel').onclick = closeSheet;
+  $('#escSend').onclick = async ()=>{
+    const note = $('#escNote').value.trim();
+    await appendEvent('escalation', `${subject} escalated to Engineer of Record`,
+      {to:facility.eor, subject, note});
+    closeSheet(); flash('Escalated to Engineer of Record — logged'); state.tab='ledger'; syncTabs(); render();
+  };
+}
+
+function amendInspection(s){
+  openSheet(`
+    <h3>Amend ${s.id}</h3>
+    <p class="small muted" style="line-height:1.55">This round is already submitted. An amendment does
+    <b style="color:#fff">not overwrite</b> the original — it records a new event referencing it, so the
+    full history stays intact. This is the control against silent edits.</p>
+    <div class="param" style="border:0"><div class="pn">What are you correcting?</div>
+      <textarea class="note" id="amNote" rows="3" placeholder="e.g. West wall seepage clarity was logged as ‘slightly turbid’; on review it was ‘clear’…"></textarea>
+    </div>
+    <div class="btnrow" style="margin-top:12px">
+      <button class="btn secondary" id="amCancel">Cancel</button>
+      <button class="btn" id="amSave">Record amendment</button>
+    </div>`);
+  $('#amCancel').onclick = closeSheet;
+  $('#amSave').onclick = async ()=>{
+    const note = $('#amNote').value.trim();
+    if(!note){ flash('Add what you are correcting first'); return; }
+    await appendEvent('inspection_amended', `${s.id} amended`, {id:s.id, reason:note, references:s.id});
+    s.amendments = (s.amendments||0)+1;
+    closeSheet(); flash('Amendment recorded — original preserved'); state.tab='ledger'; syncTabs(); render();
+  };
+}
+
+/* =========================== render: INSPECT (M03b) =========================== */
+function startInspection(level){
+  if(state.inspection && state.inspection.level===level) return;
+  state.inspection = {
+    level: level || 'Routine — East wall',
+    started: new Date(),
+    cats: Object.fromEntries(taxonomy.map(c=>[c.key, {flagged:false, params:{}, photo:false, note:''}]))
+  };
+}
+function renderInspect(){
+  const v = $('#view'); v.innerHTML='';
+  if(!state.inspection) startInspection();
+  const insp = state.inspection;
+  const flagged = taxonomy.filter(c=>insp.cats[c.key].flagged).length;
+  const reviewed = taxonomy.filter(c=>insp.cats[c.key].reviewed).length;
+  const pct = Math.round(reviewed/taxonomy.length*100);
+
+  v.appendChild(h(`
+    <div class="banner info">📴 <b>Offline-first.</b> This whole round completes with no signal and syncs on
+    reconnect. Each category is <b>“all normal”</b> by default — a clean inspection is a handful of taps;
+    only anomalies cost time.</div>`));
+
+  v.appendChild(h(`
+    <div class="card" style="padding:13px 15px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div><div class="tag">In progress${state.online?'':' · offline'}</div><h3 style="margin:2px 0 0">${insp.level}</h3></div>
+        <div class="small muted" style="text-align:right">${flagged?`<b style="color:#f7ce77">${flagged} flagged</b>`:'All normal so far'}<br>${reviewed}/${taxonomy.length} reviewed</div>
+      </div>
+      <div class="bar" style="margin-top:10px"><i style="width:${pct}%"></i></div>
+    </div>`));
+
+  // Route guidance — ordered points from M01 geometry; the round has a defined end
+  const stops = route.map((r,i)=>`<div class="rowitem" style="padding:9px 2px">
+      <span class="pill ${i===route.length-1?'blue':'green'}" style="padding:2px 8px;min-width:26px;justify-content:center">${i+1}</span>
+      <div class="grow"><div class="t" style="font-size:13.5px">${r}</div></div>
+      ${i===route.length-1?'<span class="tag">End of round</span>':'<span class="chev">↓</span>'}
+    </div>`).join('');
+  v.appendChild(h(`<div class="card"><h2>Route guidance · ${route.length} stops</h2>
+    <div class="tiny mute" style="margin-bottom:4px">Ordered from the facility geometry so nothing is missed and the round has a defined end.</div>
+    ${stops}</div>`));
+
+  taxonomy.forEach(c=>{
+    const cs = insp.cats[c.key];
+    const card = h(`<div class="cat ${cs.flagged?'flagged':''}" data-k="${c.key}">
+      <div class="head">
+        <span class="ic">${c.icon}</span>
+        <div class="grow">
+          <div class="name">${c.name}</div>
+          <div class="meta">${c.params.length} parameters${c.colour?' · colour + photo':''}</div>
+        </div>
+        <div class="toggle">
+          <button class="tg-normal ${cs.flagged?'':'on-normal'}">All normal</button>
+          <button class="tg-flag ${cs.flagged?'on-flag':''}">Flag</button>
+        </div>
+      </div>
+      <div class="params"></div>
+    </div>`);
+
+    card.querySelector('.tg-normal').onclick = ()=>{ cs.flagged=false; cs.reviewed=true; renderInspect(); };
+    card.querySelector('.tg-flag').onclick   = ()=>{ cs.flagged=true;  cs.reviewed=true; renderInspect(); };
+
+    if(cs.flagged){
+      const p = card.querySelector('.params');
+      c.params.forEach(pn=>{
+        const scale = (c.colour && /colour|clarity/i.test(pn))
+          ? ['Clear','Slightly turbid','Turbid','Discoloured']
+          : ['Normal','Minor','Moderate','Severe'];
+        // Smart default: pre-fill from last round; the user confirms or changes.
+        const prior = (previousRound[c.key]||{})[pn];
+        if(cs.params[pn]===undefined && prior!==undefined){
+          cs.params[pn]=prior; (cs.prefill||(cs.prefill={}))[pn]=true;
+        }
+        const isPrefill = cs.prefill && cs.prefill[pn];
+        const hint = isPrefill ? ` <span class="tiny" style="color:#6f8598;font-weight:500">· prefilled from last round — confirm or change</span>` : '';
+        const pel = h(`<div class="param"><div class="pn">${pn}${hint}</div><div class="scale"></div></div>`);
+        const sc = pel.querySelector('.scale');
+        scale.forEach((lab,idx)=>{
+          const b = h(`<button>${lab}</button>`);
+          if(cs.params[pn]===idx){ b.classList.add('sel'); if(idx===2)b.classList.add('warn'); if(idx===3)b.classList.add('bad'); }
+          b.onclick = ()=>{ cs.params[pn]=idx; if(cs.prefill)delete cs.prefill[pn]; renderInspect(); };
+          sc.appendChild(b);
+        });
+        if(c.colour && /colour|clarity/i.test(pn)){
+          const ph = h(`<div class="photo">
+            <div class="cam">📷 Capture photo <span class="tiny">(GPS + time auto-attached)</span></div>
+            <div class="prev">◄ last round<br>for comparison</div></div>`);
+          ph.querySelector('.cam').onclick = async ()=>{
+            cs.photo=true; await appendEvent('photo_captured', `Photo captured — ${c.name}: ${pn}`,{category:c.key, param:pn});
+            flash('Photo captured — GPS + timestamp attached'); renderInspect();
+          };
+          pel.appendChild(ph);
+        }
+        p.appendChild(pel);
+      });
+      p.appendChild(h(`<textarea class="note" rows="2" placeholder="Note for ${c.name} (optional)">${cs.note||''}</textarea>`));
+      p.querySelector('.note').oninput = e=>cs.note=e.target.value;
+      const esc = h(`<button class="btn ghost" style="margin-top:10px">⤴️ Escalate ${c.name} to Engineer of Record</button>`);
+      esc.onclick = ()=>escalate(c.name);
+      p.appendChild(esc);
+    }
+    v.appendChild(card);
+  });
+
+  v.appendChild(h(`<button class="btn big" id="submitInsp">Submit inspection${flagged?` · ${flagged} flagged`:''}</button>`));
+  $('#submitInsp').onclick = submitInspection;
+  v.appendChild(h(`<div class="tiny mute" style="text-align:center;margin-top:10px;line-height:1.5">
+    No silent edits — any change after submission creates an amendment record; it never overwrites.</div>`));
+}
+
+async function submitInspection(){
+  const insp = state.inspection;
+  const flagged = taxonomy.filter(c=>insp.cats[c.key].flagged).map(c=>c.name);
+  const id = `INSP-${1043+state.submitted.length}`;
+  await appendEvent('inspection_submitted', `${id} · ${insp.level} submitted`, {
+    id, level: insp.level, flagged, offline: !state.online
+  });
+  state.submitted.unshift({id, level:insp.level, at:new Date(), flagged, amendments:0});
+  openSheet(`
+    <h3>Inspection submitted ✓</h3>
+    <p class="small muted" style="line-height:1.55">
+      <b style="color:#fff">${insp.level}</b> recorded to the evidence ledger${state.online?'':' <b style="color:#f7ce77">(queued — will sync on reconnect)</b>'}.
+      ${flagged.length? `Flagged: <b style="color:#f7ce77">${flagged.join(', ')}</b>.` : 'No anomalies — all categories normal.'}
+    </p>
+    ${flagged.length?`<div class="banner info" style="margin:4px 0 12px">A flagged geotechnical condition can be routed to the
+      Engineer of Record in one tap from the Home screen.</div>`:''}
+    <button class="btn" id="doneInsp">Back to home</button>`);
+  $('#doneInsp').onclick = ()=>{ closeSheet(); state.inspection=null; state.tab='home'; syncTabs(); render(); };
+}
+
+/* =========================== render: WATER (M05) =========================== */
+function renderWater(){
+  const v = $('#view'); v.innerHTML='';
+  v.appendChild(h(`
+    <div class="card">
+      <h2>Water, beach & freeboard</h2>
+      <div style="display:flex;align-items:center;gap:10px;margin:6px 0 2px">
+        <span class="pill green"><span class="dot"></span>Within design envelope</span>
+      </div>
+      <div class="small muted" style="margin-top:8px;line-height:1.5">
+        Derived from Sentinel-2 (10 m, ~5-day revisit), calibrated to this site. The plain-language status is
+        above; the numbers and their uncertainty are below — nothing here is a geotechnical determination.</div>
+    </div>`));
+
+  v.appendChild(h(`
+    <div class="card">
+      <h3>Freeboard — the stack, upper and lower bound</h3>
+      <div class="kv"><span class="k">Operational freeboard (crest→tailings)</span><span class="v">2.40 m ±0.15</span></div>
+      <div class="kv"><span class="k">Max operational level</span><span class="v pill green" style="padding:2px 8px">0.9 m below ✓</span></div>
+      <div class="kv"><span class="k">Minimum decant level (lower bound)</span><span class="v pill green" style="padding:2px 8px">0.4 m above ✓</span></div>
+      <div class="kv"><span class="k">Pond area</span><span class="v">61,400 m² ±18,900</span></div>
+      <div class="kv"><span class="k">Min. water-to-crest distance</span><span class="v">214 m ±31</span></div>
+      <div class="banner warn" style="margin:12px 0 0">Over-drainage is also a reportable deviation — water must stay
+        <b>above</b> the minimum decant level, not only below the maximum.</div>
+    </div>`));
+
+  // Cross-validation timeline (the differentiator)
+  v.appendChild(h(`
+    <div class="card">
+      <h3>Cross-validation — the proof artefact</h3>
+      <div class="small muted" style="margin-bottom:10px;line-height:1.5">Satellite-derived pond area published
+        <b>alongside</b> the decant level instrument on one timeline. Agreement here is what converts the pilot.</div>
+      <div class="chart">${sparkSVG()}</div>
+      <div class="legend">
+        <span><i style="background:#4aa3ff"></i>Satellite pond area</span>
+        <span><i style="background:#37c2b8"></i>Decant level instrument</span>
+        <span><i style="background:#f4b740;height:8px;width:8px;border-radius:50%"></i>Validation image</span>
+      </div>
+    </div>`));
+
+  v.appendChild(h(`
+    <div class="banner info">🎚️ Every figure carries its uncertainty band. M05 <b>refuses to publish</b> pond
+    area when expected error exceeds a set fraction of typical pond area — a wrong number is worse than none.</div>`));
+
+  const btn = h(`<button class="btn secondary" id="calBtn">View site calibration record</button>`);
+  btn.onclick = ()=>openSheet(`
+    <h3>Site calibration record</h3>
+    <p class="small muted" style="line-height:1.55">This is <b style="color:#fff">audit evidence</b>, not a config value.
+    Thresholds are derived per site, not copied from a paper.</p>
+    <div class="kv"><span class="k">NDWI threshold (adopted)</span><span class="v">0.11</span></div>
+    <div class="kv"><span class="k">NIR threshold (adopted)</span><span class="v">870</span></div>
+    <div class="kv"><span class="k">Derivation</span><span class="v">Monthly transect, 12 mo.</span></div>
+    <div class="kv"><span class="k">Validation imagery</span><span class="v">2 VHR scenes</span></div>
+    <div class="kv"><span class="k">Residual error</span><span class="v">±20,000 m²</span></div>
+    <div class="banner info" style="margin:12px 0 0">Any change to these thresholds is an immutable ledger event with
+    actor and justification — silently relaxing a trigger is exactly what the platform exists to catch.</div>
+    <button class="btn secondary" id="calClose" style="margin-top:12px">Close</button>`);
+  v.appendChild(btn);
+  setTimeout(()=>{ const c=$('#calClose'); if(c)c.onclick=closeSheet; },0);
+}
+function sparkSVG(){
+  const sat=[42,46,44,50,58,61,60], dec=[40,45,46,49,57,62,59];
+  const W=360,H=90,pad=6, n=sat.length, dx=(W-2*pad)/(n-1);
+  const min=35,max=66, y=v=>H-pad-((v-min)/(max-min))*(H-2*pad);
+  const path=a=>a.map((v,i)=>`${i?'L':'M'}${(pad+i*dx).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" height="90">
+    <path d="${path(sat)}" fill="none" stroke="#4aa3ff" stroke-width="2.5"/>
+    <path d="${path(dec)}" fill="none" stroke="#37c2b8" stroke-width="2.5" stroke-dasharray="4 3"/>
+    <circle cx="${(pad+3*dx).toFixed(1)}" cy="${y(50).toFixed(1)}" r="4" fill="#f4b740"/>
+    <circle cx="${(pad+6*dx).toFixed(1)}" cy="${y(60).toFixed(1)}" r="4" fill="#f4b740"/>
+  </svg>`;
+}
+
+/* =========================== render: LEDGER (M14) =========================== */
+function renderLedger(){
+  const v = $('#view'); v.innerHTML='';
+  v.appendChild(h(`
+    <div class="banner info">🛡️ <b>This ledger is your defence, not surveillance.</b> Append-only and
+    hash-chained — no edit, no delete. Demonstrable proof to your board, Engineer of Record, insurer and
+    lenders that monitoring occurred and action followed.</div>`));
+
+  if(!state.ledger.length){
+    v.appendChild(h(`<div class="card" style="text-align:center;padding:34px 16px">
+      <div style="font-size:34px">🔒</div>
+      <h3 style="margin:10px 0 4px">No events yet</h3>
+      <div class="small muted">Submit an inspection or acknowledge a status and it will appear here,
+      hash-chained to the event before it.</div></div>`));
+    return;
+  }
+  const card = h(`<div class="card"><h2>Evidence ledger · ${state.ledger.length} events</h2></div>`);
+  state.ledger.forEach(e=>{
+    const extra = e.type==='alert_dismissed' || e.type==='escalation'
+      ? '' : '';
+    const el = h(`<div class="evt">
+      <div class="ic">${evIcon[e.type]||'•'}</div>
+      <div class="grow">
+        <div class="et">${e.summary}</div>
+        <div class="em">${e.actor} · ${fmtTime(e.at)}${e.offline?' · <span style="color:#f7ce77">queued offline</span>':''}${extra}</div>
+        <div class="hash">#${e.hash.slice(0,24)}… ⟶ prev ${e.prevHash.slice(0,8)}…</div>
+      </div>
+    </div>`);
+    card.appendChild(el);
+  });
+  v.appendChild(card);
+  v.appendChild(h(`<div class="tiny mute" style="text-align:center;margin-top:4px;line-height:1.5">
+    Each event's hash includes the previous event's hash. Change any past record and every hash after it breaks —
+    that is what makes it tamper-evident.</div>`));
+}
+
+/* =========================== render: FACILITY (M01) =========================== */
+function renderFacility(){
+  const v = $('#view'); v.innerHTML='';
+  v.appendChild(h(`
+    <div class="card">
+      <h2>Asset registry · M01</h2>
+      <h3 style="margin-top:4px">${facility.name}</h3>
+      <div class="small muted">${facility.operator}</div>
+      <div class="divider"></div>
+      <div class="kv"><span class="k">Construction method</span><span class="v">${facility.construction}</span></div>
+      <div class="kv"><span class="k">Storage method</span><span class="v">${facility.storage}</span></div>
+      <div class="kv"><span class="k">Consequence class</span><span class="v"><span class="pill red" style="padding:2px 8px">${facility.consequence}</span></span></div>
+      <div class="kv"><span class="k">Lifecycle phase</span><span class="v">${facility.phase}</span></div>
+    </div>`));
+
+  v.appendChild(h(`
+    <div class="banner info">Analytics are <b>gated by facility type</b>. This is an
+    <b>upstream slurry</b> facility, so the water/beach/freeboard analytic (M05) applies. A
+    <b>filtered / dry-stack</b> facility has no supernatant pond — M05 would be hidden and Phase 1 re-cut
+    around slope movement and seepage.</div>`));
+
+  v.appendChild(h(`
+    <div class="card">
+      <h2>Accountable roles</h2>
+      <div class="kv"><span class="k">Responsible Executive</span><span class="v">${facility.re}</span></div>
+      <div class="kv"><span class="k">Engineer of Record</span><span class="v">${facility.eor}</span></div>
+      <div class="kv"><span class="k">SHEQ manager</span><span class="v">${facility.sheq}</span></div>
+    </div>`));
+
+  v.appendChild(h(`
+    <div class="card">
+      <h2>Geometry (PostGIS)</h2>
+      <div class="small muted" style="margin-bottom:8px">Seeded from the facility survey — everything resolves against these.</div>
+      <div class="kv"><span class="k">Crest polygon</span><span class="v">✓ loaded</span></div>
+      <div class="kv"><span class="k">Calculation boundary</span><span class="v">✓ bounds pond calc</span></div>
+      <div class="kv"><span class="k">Beach extent · toe line</span><span class="v">✓ · ✓</span></div>
+      <div class="kv"><span class="k">Instruments (with position history)</span><span class="v">14 · 1 offline</span></div>
+    </div>`));
+
+  v.appendChild(h(`<div class="tiny mute" style="text-align:center;line-height:1.5">Seeding M01 is a data-archaeology
+    task with the in-house engineer — and facility type must be confirmed before M05 is built (spec §9).</div>`));
+}
+
+/* =========================== modal =========================== */
+function openSheet(html){
+  closeSheet();
+  const scrim = h(`<div class="scrim"><div class="sheet"><div class="grabber"></div>${html}</div></div>`);
+  scrim.onclick = e=>{ if(e.target===scrim) closeSheet(); };
+  document.body.appendChild(scrim); state.modal=scrim;
+}
+function closeSheet(){ if(state.modal){ state.modal.remove(); state.modal=null; } }
+
+/* =========================== router =========================== */
+function render(){
+  ({home:renderHome, inspect:renderInspect, water:renderWater, ledger:renderLedger, facility:renderFacility}[state.tab])();
+  $('#view').scrollTop = 0;
+}
+function syncTabs(){
+  document.querySelectorAll('.tabbar button').forEach(b=>b.classList.toggle('active', b.dataset.tab===state.tab));
+}
+document.querySelectorAll('.tabbar button').forEach(b=>{
+  b.onclick = ()=>{ state.tab=b.dataset.tab; syncTabs(); render(); };
+});
+$('#netBtn').onclick = ()=>{
+  state.online = !state.online;
+  const n=$('#netBtn'); n.classList.toggle('offline', !state.online);
+  $('#netTxt').textContent = state.online?'Online':'Offline';
+  flash(state.online?'Back online — queued events syncing…':'Offline — inspection still works, events queue locally');
+};
+
+// Seed one prior round so the amendment ("no silent edits") flow is demoable immediately.
+state.submitted.push({id:'INSP-1042', level:'Routine — West wall',
+  at:new Date(Date.now()-86400000), flagged:['Seepage flow'], amendments:0});
+
+render();
+</script>
+</body>
+</html>
