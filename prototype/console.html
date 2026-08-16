@@ -140,6 +140,28 @@
   .lyr.on{border-color:transparent;background:rgba(136,189,242,.16);color:#26333f;font-weight:600}
   .lyr:not(.on){opacity:.6}
   .lyr .ld{width:9px;height:9px;border-radius:2px;flex:none}
+  /* satellite imagery gallery */
+  .satgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+  .satcard{border:1px solid var(--line-2);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
+  .satimg{width:100%;aspect-ratio:1/1;object-fit:cover;display:block;cursor:zoom-in;background:#0b1620;transition:filter .15s}
+  .satimg:hover{filter:brightness(1.06)}
+  .satmeta{padding:9px 12px 11px}
+  .satname{font-size:9.5px;letter-spacing:.5px;text-transform:uppercase;color:#5b9bd9;font-weight:700}
+  .satq{font-size:12.6px;font-weight:700;color:#26333f;margin-top:2px}
+  .satshows{font-size:11.3px;color:var(--ink-dim);line-height:1.5;margin-top:4px}
+  .satmain{width:100%;border-radius:12px;display:block;background:#0b1620;cursor:zoom-in;border:1px solid var(--line-2)}
+  #satTabs .p2tab{color:#5b9bd9}
+  #satTabs .p2tab.on{color:#26333f}
+  .tl{display:inline-block;width:11px;height:11px;border-radius:50%;flex:none}
+  .tl.good{background:#34d399}.tl.amber{background:#fbbf24}.tl.bad{background:#f87171}
+  .infobtn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line-2);background:transparent;border-radius:999px;padding:5px 12px;font-size:11.5px;font-weight:600;color:#26333f;cursor:pointer}
+  .infobtn:hover{background:rgba(136,189,242,.14);border-color:transparent}
+  .infobtn svg{width:14px;height:14px;flex:none}
+  .videoslot{position:relative;aspect-ratio:16/9;border:1.5px dashed var(--line-2);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:rgba(56,73,89,.05);text-align:center}
+  .videoslot .vplay{width:54px;height:54px;border-radius:50%;background:#88BDF2;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(136,189,242,.5)}
+  .wfstep{border:1px solid var(--line-2);border-radius:10px;padding:11px 12px;margin-bottom:9px}
+  .wfstep.off{opacity:.55;background:rgba(56,73,89,.03)}
+  .wfrank{width:21px;height:21px;border-radius:50%;background:rgba(136,189,242,.22);display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#3f5b78;flex:none}
   /* animated ordinal severity meter (structured observation) */
   .prow{padding:11px 0;border-top:1px solid var(--line-2);animation:prowIn .5s cubic-bezier(.16,1,.3,1) backwards;animation-delay:var(--d)}
   @keyframes prowIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
@@ -928,6 +950,7 @@ const NAV = [
     {key:'inspoints', label:'Inspection points'},
     {key:'registry', label:'Asset registry'},
     {key:'raises', label:'Raise records (CDIV)'},
+    {key:'geosynthetics', label:'Geosynthetics (QA)'},
     {key:'users', label:'Users & inspectors'},
     {key:'competency', label:'Training & competency'},
     {key:'bot', label:'WhatsApp bot'},
@@ -1275,22 +1298,22 @@ const signalFeed=[
    it is on when its gate is green. This is the scaffolding the backend team builds against. */
 const P2_STATUS={scoped:['blue','Scoped'],planned:['grey','Planned'],blocked:['amber','Blocked — prereq']};
 const PHASE2=[
-  {id:'M04', name:'InSAR ground deformation', stream:'satellite', icon:'🛰️', status:'scoped', effort:'M',
+  {id:'M04', name:'InSAR ground deformation', stream:'satellite', icon:'🛰️', status:'scoped', effort:'M', activated:true,
    fills:[['Mass movement / slope','sat']],
    unlocks:'mm-scale line-of-sight wall displacement between the optical passes — the slope-movement signal Sentinel-2 optical (M05) physically cannot see.',
    source:'Sentinel-1 C-band SAR (ESA, ~6–12 day revisit) → PSI/SBAS interferometric processor',
    depends:['M01 crest/wall geometry','GNSS-2 (ground-truth)','≥1 season SAR stack'],
-   gate:[['Persistent scatterers identified','Corner reflectors or natural PS resolved on the wall face',false],
-         ['Atmospheric phase QC','Tropospheric screen correction validated against GNSS-2 to <3 mm',false],
-         ['Deformation TARP derived','Site mm/yr amber & red triggers set and EoR-signed (M09)',false]]},
-  {id:'M06', name:'Vegetation & chemical seepage analytics', stream:'satellite', icon:'🛰️', status:'scoped', effort:'M',
+   gate:[['Persistent scatterers identified','Corner reflectors or natural PS resolved on the wall face',true],
+         ['Atmospheric phase QC','Tropospheric screen correction validated against GNSS-2 to <3 mm',true],
+         ['Deformation TARP derived','Site mm/yr amber & red triggers set and EoR-signed (M09)',true]]},
+  {id:'M06', name:'Vegetation & chemical seepage analytics', stream:'satellite', icon:'🛰️', status:'scoped', effort:'M', activated:true,
    fills:[['Seepage','sat']],
    unlocks:'seepage detected from space — NDVI/NDMI vegetation-stress lines on the downstream face and spectral turbidity in the toe drains, ahead of a visible wet patch.',
    source:'Sentinel-2 red-edge/SWIR bands (M05 pipeline extension) + optional multispectral drone',
    depends:['M05 scene pipeline','Toe-drain & downstream-face polygons (M01)'],
-   gate:[['Baseline vegetation index','≥12 months NDVI/NDMI baseline per face segment captured',false],
-         ['Seepage signature calibrated','Index anomaly validated against 2+ confirmed field seepage events',false],
-         ['False-positive screen','Rainfall/irrigation confounders masked before an alert fires',false]]},
+   gate:[['Baseline vegetation index','≥12 months NDVI/NDMI baseline per face segment captured',true],
+         ['Seepage signature calibrated','Index anomaly validated against 2+ confirmed field seepage events',true],
+         ['False-positive screen','Rainfall/irrigation confounders masked before an alert fires',true]]},
   {id:'M07', name:'Multi-temporal change detection', stream:'satellite', icon:'🛰️', status:'planned', effort:'S',
    fills:[['Mass movement / slope','sat'],['Overtopping / freeboard','sat']],
    unlocks:'automatic scene-to-scene and DEM-to-DEM differencing — crest encroachment, new construction, beach migration and surface change flagged without a human comparing images.',
@@ -1407,11 +1430,54 @@ const grievances=[
 /* ---------- breach & consequence knowledge base (GISTM Topic II) ---------- */
 const breachStudy={date:'Nov 2024', next:'Nov 2029', by:'Specialist consultancy', method:'Dam-break with 3-layer tailings rheology + agent-based life-safety model', assumption:'~1/5 of stored volume released (literature norm)'};
 const receptors=[
-  {name:'Farm dams & grazing (3 farms)', dist:'1.2 km', arrival:'~8 min', exposure:'Low population · livestock'},
-  {name:'R510 road crossing', dist:'3.4 km', arrival:'~22 min', exposure:'Transient traffic'},
-  {name:'Ward 14 settlement edge', dist:'5.1 km', arrival:'~40 min', exposure:'~350 people — evacuation zone A'},
-  {name:'Elands River confluence', dist:'8.9 km', arrival:'~75 min', exposure:'Environmental — water quality'},
+  {name:'Farm dams & grazing (3 farms)', dist:'1.2 km', distKm:1.2, arrival:'~8 min', exposure:'Low population · livestock'},
+  {name:'R510 road crossing', dist:'3.4 km', distKm:3.4, arrival:'~22 min', exposure:'Transient traffic'},
+  {name:'Ward 14 settlement edge', dist:'5.1 km', distKm:5.1, arrival:'~40 min', exposure:'~350 people — evacuation zone A'},
+  {name:'Elands River confluence', dist:'8.9 km', distKm:8.9, arrival:'~75 min', exposure:'Environmental — water quality'},
 ];
+/* Breach-impact event — a satellite-measured actual/near-real breach for rapid impact + magnitude,
+   feeding the digital-twin dam-break simulation (M11). Demonstration scenario on Parabola TSF1;
+   for a live incident the pre/post imagery is the real acquisition. */
+const breachEvent={
+  status:'scenario',                       // scenario | live
+  when:'Scenario — rapid post-event assessment',
+  wall:'South-west wall — the seepage-watch zone (RA-04 / AL-31)',
+  before:'truecolor.jpg', after:'breach_after.jpg',
+  measuredFrom:'Sentinel-2 change detection · pre 3 Jul 2026 vs post-event scene',
+  mag:{
+    breachWidth:180,        // m — gap in the wall
+    releasedMm3:2.3,        // Mm³ — from impoundment area/level change × depth
+    releasedPct:18,         // % of stored volume
+    inundationHa:312,       // ha — mapped run-out footprint
+    runoutKm:6.4,           // km — leading-edge travel
+    azimuth:'SW · 222°',
+    peakDepthM:3.1,         // m — max flow depth in the footprint
+    depositM:1.4,           // m — mean deposited thickness
+  },
+  twin:{ runoutModelKm:6.8, inundationModelHa:340, note:'Dam-break model (3-layer rheology) run with the satellite breach geometry + released volume as boundary conditions.' },
+};
+/* Geosynthetics QA — the facility's liner / drainage / reinforcement geosynthetics and the
+   independent laboratory test evidence (UCT) that each meets design. The liner interface is a
+   classic failure plane (stability) and the barrier that keeps seepage in check — so these
+   results underpin the FMEA and the design basis. `feeds` links each component to its failure mode. */
+const geoComponents=[
+  {id:'GM-01', layer:'Basal geomembrane liner', material:'HDPE 2.0 mm, textured', role:'Primary seepage barrier', feeds:'RA-04', status:'conform'},
+  {id:'GCL-01', layer:'Geosynthetic clay liner', material:'Needle-punched bentonite GCL', role:'Backup barrier — self-healing', feeds:'RA-04', status:'conform'},
+  {id:'GN-01', layer:'Drainage geocomposite', material:'Geonet + bonded geotextile', role:'Underdrainage & leak detection', feeds:'RA-03', status:'conform'},
+  {id:'GT-01', layer:'Protection geotextile', material:'Non-woven PP, 800 g/m²', role:'Cushion — puncture protection', feeds:'RA-04', status:'review'},
+  {id:'GG-01', layer:'Reinforcement geogrid', material:'PET geogrid', role:'Starter-wall reinforcement', feeds:'RA-02', status:'pending'},
+];
+const geoTests=[
+  {sample:'S-241', comp:'GM-01', test:'Interface (direct) shear', std:'ASTM D5321', measured:'φ 24° · c 6 kPa', spec:'φ ≥ 22°', pass:true,  cert:'UCT-GS-241', date:'2 Aug 2026'},
+  {sample:'S-242', comp:'GM-01', test:'Tensile — yield', std:'ASTM D6693', measured:'31 kN/m', spec:'≥ 29 kN/m', pass:true,  cert:'UCT-GS-242', date:'2 Aug 2026'},
+  {sample:'S-243', comp:'GM-01', test:'Seam peel strength', std:'ASTM D6392', measured:'FTB (film-tear bond)', spec:'FTB', pass:true, cert:'UCT-GS-243', date:'2 Aug 2026'},
+  {sample:'S-244', comp:'GM-01', test:'OIT — durability', std:'ASTM D3895', measured:'128 min', spec:'≥ 100 min', pass:true, cert:'UCT-GS-244', date:'2 Aug 2026'},
+  {sample:'S-245', comp:'GCL-01', test:'Hydraulic conductivity', std:'ASTM D5887', measured:'3.1×10⁻¹¹ m/s', spec:'≤ 5×10⁻¹¹ m/s', pass:true, cert:'UCT-GS-245', date:'28 Jul 2026'},
+  {sample:'S-246', comp:'GN-01', test:'Transmissivity', std:'ASTM D4716', measured:'2.4×10⁻⁴ m²/s', spec:'≥ 2×10⁻⁴ m²/s', pass:true, cert:'UCT-GS-246', date:'28 Jul 2026'},
+  {sample:'S-247', comp:'GT-01', test:'Puncture — CBR', std:'ASTM D6241', measured:'4.9 kN', spec:'≥ 5.0 kN', pass:false, cert:'UCT-GS-247', date:'28 Jul 2026'},
+  {sample:'S-248', comp:'GG-01', test:'Tensile strength', std:'ASTM D6637', measured:'awaiting', spec:'≥ 60 kN/m', pass:null, cert:'—', date:'in progress'},
+];
+const geoLab='UCT Geotechnical Materials Laboratory';
 /* ---------- training & competency (GISTM IV / M19) ---------- */
 const competency=[
   {person:'J. Peters', role:'Inspector', cert:'Visual inspection (7-category taxonomy) + WhatsApp capture', status:'current', due:'Mar 2027'},
@@ -1698,6 +1764,9 @@ const EMOJI_SVG={
   '⚠️':_em('<path d="M12 3.5L2.5 19.5h19L12 3.5z"/><path d="M12 10v4M12 17h.01"/>'),'⚠':_em('<path d="M12 3.5L2.5 19.5h19L12 3.5z"/><path d="M12 10v4M12 17h.01"/>'),
   '✅':_em('<circle cx="12" cy="12" r="8.5"/><path d="M8.2 12.3l2.6 2.6 5-5.4"/>'),
   '📒':NAV_ICONS.ledger,
+  '🏖️':_em('<path d="M3 19h18"/><path d="M3.5 19c1.6-1.4 3.2-1.4 4.8 0M9.3 19c1.6-1.4 3.2-1.4 4.8 0M15.1 19c1.6-1.4 3.2-1.4 4.8 0"/><circle cx="7.5" cy="7.5" r="3"/><path d="M12 12c1.5-3.5 4.5-5 8-4.5"/>'),
+  '🌿':_em('<path d="M11.5 20c-.5-6 1.5-10.5 8-12.5-.5 6.5-3 10-8 12.5z"/><path d="M11.5 20c0-4.5-1.5-7.5-5-9"/>'),
+  '🧱':_em('<rect x="3" y="5" width="18" height="14" rx="1"/><path d="M3 9.7h18M3 14.3h18M9 5v4.7M15 5v4.7M6 9.7v4.6M12 9.7v4.6M18 9.7v4.6M9 14.3V19M15 14.3V19"/>'),
 };
 const EMOJI_RE=new RegExp(Object.keys(EMOJI_SVG).join('|'),'g');
 function iconize(s){return s.replace(EMOJI_RE,m=>(EMOJI_SVG[m]||m).replace('<svg class="emico"','<svg class="emico"').replace(/^<svg viewBox/,'<svg class="emico" viewBox'));}
@@ -1743,8 +1812,8 @@ const TITLES={
     'People-safety and site-security in one place, wired to the operational picture. Safety performance and incidents, EPRP readiness, and the connected security platforms (access control, CCTV, perimeter) — so an operational signal and a safety or security event are seen against each other, not in separate silos.'],
   inspections:['Inspection history','Inspection history — what has been watched',
     'The retrospective record across every stream — satellite, drone, sensors and manual rounds — what each one saw, when, and how it was corroborated. Forward planning lives in the Schedule; this is the evidence of what has already happened.'],
-  satops:['Satellite operations','Satellite operations',
-    'The satellite stream end to end — scene acquisition, cloud screening, calibration and the M05 analytics pipeline. A full build-out is planned; this is the interim placeholder showing what flows in today and what is coming.'],
+  satops:['Satellite operations','Satellite operations — reading the dam from space',
+    'A real Sentinel-2 pass of Parabola TSF1 turned into a picture of the dam’s health — pond, beach, moisture and vegetation — with a plain-language framework anyone can read. Published pond / freeboard metrics feed Water & freeboard; InSAR and chemical seepage are the Phase-2 extensions.'],
   schedule:['Schedule','Planning hub — schedule everything',
     'The central hub. Plan surveillance across every stream from here — inspection rounds, drone missions, reviews and drills — and it flows out as dispatched job cards, WhatsApp prompts and calendar entries. Everything downstream starts on this page.'],
   jobcards:['Job cards','Job cards & field dispatch',
@@ -1781,6 +1850,8 @@ const TITLES={
     'The GPS position of every common inspection point on the facility — captured once at onboarding. Routes for manual rounds are built from these, and every field reading anchors to one. Open the map to see them all.'],
   raises:['Set up','Construction & raise records (CDIV)',
     'Every lift verified against design intent — construction vs design, as-built survey, EoR sign-off. The dam you operate must be the dam that was designed.'],
+  geosynthetics:['Set up','Geosynthetics — liner & drainage QA',
+    'The independent test evidence that the liner, drainage and reinforcement geosynthetics meet design — tensile, interface shear, seam, hydraulic and durability results from the UCT laboratory, tracked against specification. The liner interface is a classic failure plane and the barrier that keeps seepage in check, so this is where the system\'s reliability is grounded in laboratory fact.'],
   tarp:['Thresholds','Site-specific thresholds (TARP)',
     'Every surveillance technique carries site-derived green/amber/red triggers — with the action, the named owner, and the other stream that must corroborate an amber before it escalates. No universal thresholds: each derivation is audit evidence.'],
   risk:['Risk register','Failure-mode risk register (FMEA)',
@@ -1810,7 +1881,7 @@ function render(){
     compliance:renderCompliance,cost:renderCost,designbasis:renderDesignBasis,readings:renderReadings,
     instruments:renderInstruments,droneops:renderDroneOps,satops:renderSatelliteOps,schedule:renderSchedule,tarp:renderTarp,
     emergency:renderEmergency,reviews:renderReviews,stakeholders:renderStakeholders,breach:renderBreach,
-    competency:renderCompetency,raises:renderRaises,inspoints:renderInspPoints,
+    competency:renderCompetency,raises:renderRaises,inspoints:renderInspPoints,geosynthetics:renderGeosynthetics,
     roadmap:renderRoadmap,projman:renderProjectMgmt,safety:renderSafety}[state.view])();
   if(sectionOf(state.view).sec==='setup'){
     const w=h(`<div class="banner warn" style="margin-bottom:16px">⚠️ <b>You're in Set up — the foundation every report is built on.</b> A change here ripples into every compliance check and generated report. Edit deliberately: each change asks you to confirm, is logged with who and why, and a precise record is exactly what makes the reporting defensible.</div>`);
@@ -3062,21 +3133,175 @@ function breachMapSVG(){
     <circle cx="${b.cx+250}" cy="${b.cy+80}" r="4" fill="#fbbf24"/><text x="${b.cx+258}" y="${b.cy+84}" fill="#fcd34d" font-size="9">Ward 14 edge · ~40 min</text>
     <text x="${b.pad+6}" y="${b.pad+15}" fill="#7fa0b5" font-size="11">▲ N</text></svg>`;
 }
+/* Satellite-measured breach run-out profile: facility+breach → depth-graded corridor →
+   receptors plotted at their distance (red = within the measured run-out, grey = beyond). */
+function breachImpactSVG(W,H){
+  W=W||1040;H=H||280; const padL=96,padR=30,padT=26,padB=48,maxKm=10, m=breachEvent.mag;
+  const X=km=>padL+(km/maxKm)*(W-padL-padR), cy=(padT+(H-padB))/2, re=X(m.runoutKm);
+  const corr=`${padL},${cy-14} ${X(1)},${cy-34} ${X(m.runoutKm*0.6)},${cy-46} ${re},${cy-22} ${re},${cy+22} ${X(m.runoutKm*0.6)},${cy+46} ${X(1)},${cy+34} ${padL},${cy+14}`;
+  const recs=receptors.map(r=>{const x=X(r.distKm),hit=r.distKm<=m.runoutKm,c=hit?'#f87171':'#8aa0b2';
+    return `<line x1="${x.toFixed(1)}" y1="${padT}" x2="${x.toFixed(1)}" y2="${H-padB}" stroke="#22384a" stroke-width="1" stroke-dasharray="2 3"/>
+      ${hit?`<circle cx="${x.toFixed(1)}" cy="${cy}" r="11" fill="none" stroke="#f87171" stroke-width="1.5"/>`:''}
+      <circle cx="${x.toFixed(1)}" cy="${cy}" r="${hit?6:5}" fill="${c}" stroke="#0b1620" stroke-width="1.5"/>
+      <text x="${x.toFixed(1)}" y="${padT-5}" fill="${hit?'#fca5a5':'#7f93a5'}" font-size="9" text-anchor="middle">${hit?r.arrival:'beyond'}</text>
+      <text x="${x.toFixed(1)}" y="${H-padB+14}" fill="#9fb3c6" font-size="9" text-anchor="middle">${r.distKm} km</text>
+      <text x="${x.toFixed(1)}" y="${H-padB+26}" fill="#7f93a5" font-size="8" text-anchor="middle">${r.name.split(/[ ·]/)[0]}</text>`;}).join('');
+  let ticks='';for(let k=0;k<=maxKm;k+=2){const x=X(k);ticks+=`<line x1="${x.toFixed(1)}" y1="${H-padB}" x2="${x.toFixed(1)}" y2="${H-padB+4}" stroke="#3a4a5a"/>`;}
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}">
+    <defs><linearGradient id="brg" x1="0" x2="1"><stop offset="0" stop-color="#7a5a34"/><stop offset="0.5" stop-color="#a8895a"/><stop offset="1" stop-color="#d8c39a"/></linearGradient></defs>
+    <rect width="${W}" height="${H}" fill="#0b1620"/>
+    <line x1="${padL}" y1="${H-padB}" x2="${W-padR}" y2="${H-padB}" stroke="#3a4a5a"/>${ticks}
+    <polygon points="${corr}" fill="url(#brg)" opacity="0.92" stroke="#c9a97a" stroke-width="1"/>
+    <text x="${X(m.runoutKm*0.5).toFixed(1)}" y="${cy+3}" fill="#241a0d" font-size="10" font-weight="700" text-anchor="middle">run-out · ${m.inundationHa} ha · peak ${m.peakDepthM} m</text>
+    <ellipse cx="${padL-36}" cy="${cy}" rx="30" ry="35" fill="#37c2b81a" stroke="#37c2b8" stroke-width="2"/>
+    <ellipse cx="${padL-32}" cy="${cy+13}" rx="12" ry="8" fill="#4aa3ff55" stroke="#cfe6ff"/>
+    <path d="M${padL-8} ${cy-11} L${padL} ${cy} L${padL-8} ${cy+11}" fill="none" stroke="#f87171" stroke-width="3"/>
+    <text x="${padL-36}" y="${cy-42}" fill="#7fb5f7" font-size="9" text-anchor="middle">TSF · breach ${m.breachWidth} m</text>
+    ${recs}
+    <text x="${re.toFixed(1)}" y="${cy-30}" fill="#fca5a5" font-size="9" text-anchor="middle">leading edge ${m.runoutKm} km</text>
+    <text x="${W-padR}" y="${H-padB+14}" fill="#7f93a5" font-size="9" text-anchor="end">distance downstream →</text></svg>`;
+}
+function digitalTwinModal(){
+  const m=breachEvent.mag, t=breachEvent.twin;
+  openModal('Digital-twin dam-break simulation (M11)',
+    `<div class="banner info" style="margin-bottom:12px">The satellite gives the <b>ground truth</b> of what actually happened; the digital twin runs the physics. Feeding the <b>satellite-measured breach geometry and released volume</b> in as boundary conditions calibrates the model — so future what-if runs (a bigger breach, a wetter season) inherit a validated baseline. ${t.note}</div>
+    <h2 style="margin:0 0 6px">Boundary conditions — from satellite</h2>
+    ${[['Breach width', m.breachWidth+' m'],['Released volume', m.releasedMm3+' Mm³ ('+m.releasedPct+'% of impoundment)'],['Breach azimuth', m.azimuth],['Mean deposit thickness', m.depositM+' m']].map(([k,val])=>`<div class="kv"><span class="k">${k}</span><span class="v">${val}</span></div>`).join('')}
+    <h2 style="margin:16px 0 6px">Measured vs modelled</h2>
+    <table><thead><tr><th>Parameter</th><th>Satellite (measured)</th><th>Twin (modelled)</th><th>Δ</th></tr></thead><tbody>
+      <tr><td>Run-out distance</td><td><b>${m.runoutKm} km</b></td><td>${t.runoutModelKm} km</td><td class="muted">+${(t.runoutModelKm-m.runoutKm).toFixed(1)} km</td></tr>
+      <tr><td>Inundation area</td><td><b>${m.inundationHa} ha</b></td><td>${t.inundationModelHa} ha</td><td class="muted">+${t.inundationModelHa-m.inundationHa} ha</td></tr>
+    </tbody></table>
+    <div class="banner warn" style="margin-top:12px">Model over-predicts run-out by ~6% — within tolerance. The measured event tightens the twin's rheology parameters; the recalibrated model then re-sizes the evacuation zones and the RA-01 / RA-02 Severity scores.</div>`,
+    `<button class="btn sec" id="dt_close">Close</button><button class="btn" id="dt_run">↻ Re-run with calibration</button>`);
+  $('#dt_close').onclick=closeModal;
+  $('#dt_run').onclick=()=>{pushEvent('breach_sim','Digital-twin dam-break re-run with satellite-calibrated breach parameters — run-out '+t.runoutModelKm+' km, '+t.inundationModelHa+' ha'); closeModal(); flash('Twin re-run — evacuation zones & Severity re-sized');};
+}
 function renderBreach(){
   const v=$('#view'); v.innerHTML='';
-  v.appendChild(h(`<div class="banner info">🌊 <b>If it failed, where would it go?</b> The breach study behind every Severity score and evacuation zone — impacted area, arrival times, depths and velocities. GISTM Topic II: refreshed <b>at least every five years</b>, and after any significant change (a raise counts).</div>`));
+  const m=breachEvent.mag, hit=receptors.filter(r=>r.distKm<=m.runoutKm);
+  v.appendChild(h(`<div class="banner warn">🌊 <b>Breach-impact assessment — satellite.</b> When a wall fails, the first questions are <b>how big</b> and <b>where did it go</b>. A before/after satellite pass answers both within hours — the released volume, the run-out footprint and who is in the path — and hands those numbers to the digital-twin dam-break model. <span class="mute">Demonstration scenario on ${facility.name || 'Parabola TSF1'}; a live event loads the real acquisition.</span></div>`));
+
+  // Incident header + magnitude
+  v.appendChild(h(`<div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin:2px 2px 8px">
+    <div><span class="pill amber" style="padding:2px 10px"><span class="dot"></span>${breachEvent.status==='live'?'LIVE INCIDENT':'Scenario'}</span> <span class="tiny mute" style="margin-left:6px">${breachEvent.wall}</span></div>
+    <span class="tiny mute">${breachEvent.measuredFrom}</span></div>`));
+  const mg=h(`<div class="grid g4 mb"></div>`);
+  [['Released volume', m.releasedMm3+' Mm³', m.releasedPct+'% of impoundment','bad'],
+   ['Breach width', m.breachWidth+' m', 'gap in the SW wall','bad'],
+   ['Inundation area', m.inundationHa+' ha', 'mapped run-out footprint','warn'],
+   ['Run-out distance', m.runoutKm+' km', m.azimuth+' · peak '+m.peakDepthM+' m','warn']
+  ].forEach(([l,big,sub,c])=>mg.appendChild(h(`<div class="stat ${c}"><div class="lab">${l}</div><div class="num" style="font-size:22px">${big}</div><div class="sub">${sub}</div></div>`)));
+  v.appendChild(mg);
+
+  // Before / after satellite
+  v.appendChild(h(`<div class="card mb"><h2>Before → after — the change from space</h2>
+    <div class="tiny mute" style="margin:2px 0 10px">The magnitude figures above are measured from this pair: the wall breach, the drained impoundment and the run-out lobe are what change between the two passes.</div>
+    <div class="grid g2" style="gap:16px">
+      <div><div class="satname">Before · 3 Jul 2026</div><img src="sat/${breachEvent.before}" style="width:100%;border-radius:10px;margin-top:5px;border:1px solid var(--line-2)"></div>
+      <div><div class="satname" style="color:#f87171">After · post-event <span class="pill grey" style="padding:0 6px;font-size:9px">scenario</span></div><img src="sat/${breachEvent.after}" style="width:100%;border-radius:10px;margin-top:5px;border:1px solid rgba(248,113,113,.4)"></div>
+    </div></div>`));
+
+  // Run-out impact profile + receptors hit
+  v.appendChild(h(`<div class="card mb"><h2>Run-out impact — who is in the path</h2>
+    <div class="tiny mute" style="margin:2px 0 8px">The measured ${m.runoutKm} km run-out determines which receptors are actually reached (red) and which sit beyond it (grey) — the footprint the evacuation is sized to.</div>
+    <div class="chart">${breachImpactSVG(1040,280)}</div>
+    <div class="banner ${hit.length?'warn':'info'}" style="margin-top:10px"><b>${hit.length} of ${receptors.length} receptors within the run-out.</b> ${hit.map(r=>r.name.split(/[ ·]/)[0]+' ('+r.arrival+')').join(' · ')}. ${receptors.length-hit.length?'Beyond the leading edge: '+receptors.filter(r=>r.distKm>m.runoutKm).map(r=>r.name.split(/[ ·]/)[0]).join(', ')+'.':''}</div></div>`));
+
+  // Digital twin
+  v.appendChild(h(`<div class="card mb" style="border-color:rgba(136,189,242,.4)"><div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <div><h2>Digital twin — feed the simulation (M11)</h2>
+      <div class="tiny mute" style="margin-top:2px;max-width:640px">The satellite-measured breach geometry and released volume become the <b>boundary conditions</b> for the dam-break model. Satellite ground-truths the twin — the recalibrated model then re-sizes the evacuation zones and Severity scores, and every what-if run (a bigger breach, a wetter season) inherits a validated baseline.</div></div>
+      <button class="btn sm" id="dtOpen">Open simulation →</button></div>
+    <div class="grid g2" style="margin-top:12px">
+      <div class="stat good" style="box-shadow:none"><div class="lab">Run-out — measured vs modelled</div><div class="num" style="font-size:20px">${m.runoutKm} / ${breachEvent.twin.runoutModelKm} km</div><div class="sub">model +${(breachEvent.twin.runoutModelKm-m.runoutKm).toFixed(1)} km (~6%) · within tolerance</div></div>
+      <div class="stat good" style="box-shadow:none"><div class="lab">Inundation — measured vs modelled</div><div class="num" style="font-size:20px">${m.inundationHa} / ${breachEvent.twin.inundationModelHa} ha</div><div class="sub">calibrated to the measured event</div></div>
+    </div></div>`));
+  setTimeout(()=>{const b=$('#dtOpen'); if(b)b.onclick=digitalTwinModal;},0);
+
+  // The pre-event study (context)
+  v.appendChild(h(`<h2 style="${SUBHEAD}">The pre-event breach study — the plan the impact is checked against</h2>`));
   const grid=h(`<div class="grid g4 mb"></div>`);
   grid.appendChild(h(`<div class="stat good"><div class="lab">Breach study</div><div class="num" style="font-size:19px;padding-top:9px">Nov 2024</div><div class="sub">${breachStudy.by}</div></div>`));
   grid.appendChild(h(`<div class="stat good"><div class="lab">Refresh due</div><div class="num" style="font-size:19px;padding-top:9px">Nov 2029</div><div class="sub">or after Raise 5 — whichever first</div></div>`));
   grid.appendChild(h(`<div class="stat warn"><div class="lab">Shortest arrival</div><div class="num" style="font-size:19px;padding-top:9px">~8 min</div><div class="sub">farm dams, 1.2 km — cascade sized to this</div></div>`));
   grid.appendChild(h(`<div class="stat warn"><div class="lab">Evacuation zone A</div><div class="num" style="font-size:19px;padding-top:9px">~350</div><div class="sub">people · Ward 14 edge, ~40 min</div></div>`));
   v.appendChild(grid);
-  v.appendChild(h(`<div class="card mb"><h2>Modelled run-out & receptors</h2><div class="chart" style="margin-top:8px">${breachMapSVG()}</div>
-    <div class="tiny mute" style="margin-top:8px">${breachStudy.method} · ${breachStudy.assumption}. Schematic — the real build renders the study's inundation raster.</div></div>`));
-  const tbl=h(`<div class="card" style="padding:6px 6px 2px"><table><thead><tr><th>Receptor</th><th>Distance</th><th>Arrival</th><th>Exposure</th></tr></thead><tbody></tbody></table></div>`);
-  receptors.forEach(r=>tbl.querySelector('tbody').appendChild(h(`<tr><td style="font-weight:600">${r.name}</td><td>${r.dist}</td><td><b>${r.arrival}</b></td><td class="muted">${r.exposure}</td></tr>`)));
+  const tbl=h(`<div class="card" style="padding:6px 6px 2px"><table><thead><tr><th>Receptor</th><th>Distance</th><th>Arrival</th><th>In this run-out?</th><th>Exposure</th></tr></thead><tbody></tbody></table></div>`);
+  receptors.forEach(r=>{const inside=r.distKm<=m.runoutKm;
+    tbl.querySelector('tbody').appendChild(h(`<tr><td style="font-weight:600">${r.name}</td><td>${r.dist}</td><td><b>${r.arrival}</b></td><td>${inside?'<span class="pill red"><span class="dot"></span>reached</span>':'<span class="pill grey">beyond</span>'}</td><td class="muted">${r.exposure}</td></tr>`));});
   v.appendChild(tbl);
-  v.appendChild(h(`<div class="banner warn" style="margin-top:16px">The ~8-minute nearest arrival is why the notification cascade is ordered the way it is — and why RA-01/RA-02 carry Severity 9. Consequence sizes everything upstream of it.</div>`));
+  v.appendChild(h(`<div class="banner warn" style="margin-top:16px">The ~8-minute nearest arrival is why the notification cascade is ordered the way it is — and why RA-01 / RA-02 carry Severity 9. A measured event either confirms the study or triggers its refresh (GISTM Topic II).</div>`));
+}
+/* =========================== geosynthetics QA (UCT lab integration) =========================== */
+function renderGeosynthetics(){
+  const v=$('#view'); v.innerHTML='';
+  const done=geoTests.filter(t=>t.pass!==null), pass=done.filter(t=>t.pass), fails=done.filter(t=>!t.pass), pending=geoTests.filter(t=>t.pass===null);
+  const conf=done.length?Math.round(100*pass.length/done.length):0;
+  v.appendChild(h(`<div class="banner info">🧪 <b>Geosynthetics QA — in partnership with UCT.</b> The liner, drainage and reinforcement geosynthetics are only as good as the evidence they meet design. Independent laboratory results from the <b>${geoLab}</b> are logged here against specification — tensile, <b>interface shear</b> (a classic failure plane), seam, hydraulic and durability. Grounding the platform in laboratory fact is what makes its risk picture reliable.</div>`));
+
+  const grid=h(`<div class="grid g4 mb"></div>`);
+  grid.appendChild(h(`<div class="stat good"><div class="lab">Components on file</div><div class="num">${geoComponents.length}</div><div class="sub">liner · drainage · reinforcement</div></div>`));
+  grid.appendChild(h(`<div class="stat ${conf>=90?'good':'warn'}"><div class="lab">Conformance</div><div class="num">${conf}%</div><div class="sub">${pass.length} of ${done.length} tests pass spec</div></div>`));
+  grid.appendChild(h(`<div class="stat ${fails.length?'bad':'good'}"><div class="lab">Non-conformances</div><div class="num">${fails.length}</div><div class="sub">${fails.length?fails.map(f=>f.sample).join(', ')+' — action needed':'none open'}</div></div>`));
+  grid.appendChild(h(`<div class="stat ${pending.length?'warn':'good'}"><div class="lab">Awaiting results</div><div class="num">${pending.length}</div><div class="sub">${pending.length?pending.map(p=>p.comp).join(', ')+' at UCT':'all returned'}</div></div>`));
+  v.appendChild(grid);
+
+  // Components & conformance
+  v.appendChild(h(`<h2 style="${SUBHEAD}">Geosynthetic components — the barrier & drainage system</h2>`));
+  const cst={conform:['green','Conforming'],review:['amber','Under review'],pending:['grey','Awaiting tests']};
+  const ctbl=h(`<div class="card mb" style="padding:6px 6px 2px"><table><thead><tr><th>ID</th><th>Layer</th><th>Material</th><th>Role</th><th>Feeds</th><th>Status</th></tr></thead><tbody></tbody></table></div>`);
+  geoComponents.forEach(c=>{const s=cst[c.status]||['grey',c.status];
+    ctbl.querySelector('tbody').appendChild(h(`<tr><td class="mono">${c.id}</td><td style="font-weight:600">${c.layer}</td><td class="muted">${c.material}</td><td>${c.role}</td><td class="mono" style="font-size:11.5px">${c.feeds}</td><td><span class="pill ${s[0]}"><span class="dot"></span>${s[1]}</span></td></tr>`));});
+  v.appendChild(ctbl);
+
+  // Test results (UCT)
+  const head=h(`<div class="row" style="justify-content:space-between;align-items:center;margin:8px 2px 8px;flex-wrap:wrap;gap:8px">
+    <h2 style="margin:0;color:var(--ink-dim);font-size:11.5px;letter-spacing:.5px;text-transform:uppercase">Laboratory test results — ${geoLab}</h2>
+    ${canAct()?'<button class="btn sec sm" id="geoAdd">📎 Upload result</button>':''}</div>`);
+  v.appendChild(head);
+  const rb=head.querySelector('#geoAdd'); if(rb)rb.onclick=uploadGeoTest;
+  const ttbl=h(`<div class="card mb" style="padding:6px 6px 2px"><table><thead><tr><th>Sample</th><th>Component</th><th>Test · standard</th><th>Measured</th><th>Spec</th><th>Result</th><th>Cert</th><th>Date</th></tr></thead><tbody></tbody></table></div>`);
+  geoTests.forEach(t=>{const res=t.pass===null?'<span class="pill grey">pending</span>':t.pass?'<span class="pill green"><span class="dot"></span>pass</span>':'<span class="pill red"><span class="dot"></span>fail</span>';
+    ttbl.querySelector('tbody').appendChild(h(`<tr><td class="mono">${t.sample}</td><td class="mono">${t.comp}</td><td><div style="font-weight:600">${t.test}</div><div class="tiny mute">${t.std}</div></td><td class="mono" style="font-size:11.5px">${t.measured}</td><td class="mono muted" style="font-size:11.5px">${t.spec}</td><td>${res}</td><td class="tiny mute">${t.cert}</td><td class="muted">${t.date}</td></tr>`));});
+  v.appendChild(ttbl);
+
+  // Non-conformance / integration
+  if(fails.length){const f=fails[0], fc=geoComponents.find(c=>c.id===f.comp);
+    v.appendChild(h(`<div class="banner warn"><b>⚠ Non-conformance — ${f.sample}: ${f.test} below spec (${f.measured} vs ${f.spec}).</b> ${fc?fc.layer+' ('+fc.id+')':f.comp} is flagged <b>under review</b>. A protection geotextile that fails puncture leaves the liner exposed — it feeds <b>${fc?fc.feeds:'RA-04'} (seepage)</b>. Actioned as a corrective action; the roll lot is quarantined pending re-test.</div>`));}
+  v.appendChild(h(`<div class="card"><h2>How this grounds the platform</h2>
+    ${[['🧱 Interface shear (ASTM D5321)','The geomembrane interface is a low-friction failure plane. The measured φ 24° confirms the assumption behind the slope-stability FoS — feeds RA-02.'],
+       ['💧 Liner & GCL integrity','Hydraulic conductivity and puncture results verify the seepage barrier — feeds RA-03 / RA-04 and the environmental case.'],
+       ['📐 Design-basis anchor','Every result is checked against the design specification; a fail is a construction non-conformance, not a monitoring signal — it changes what the dam <i>is</i>.'],
+       ['🔗 Independent & traceable','UCT is the independent laboratory; each result carries a certificate reference and is a ledger event — defensible to the EoR, the regulator and the insurer.']]
+      .map(([t,s])=>`<div class="srow"><span style="font-size:15px;width:26px;text-align:center">${t.split(' ')[0]}</span><div class="grow"><div class="t" style="font-size:13px;color:#26333f">${t.slice(t.indexOf(' ')+1)}</div><div class="s">${s}</div></div></div>`).join('')}</div>`));
+}
+function uploadGeoTest(){
+  if(!canAct()){flash('Read-only role — uploading results needs SHEQ / EoR');return;}
+  const sel=(arr,label)=>arr.map(o=>`<option>${o}</option>`).join('');
+  const comps=geoComponents.map(c=>`<option value="${c.id}">${c.id} · ${c.layer}</option>`).join('');
+  const tests=['Interface (direct) shear · ASTM D5321','Tensile — yield · ASTM D6693','Seam peel strength · ASTM D6392','OIT — durability · ASTM D3895','Hydraulic conductivity · ASTM D5887','Transmissivity · ASTM D4716','Puncture — CBR · ASTM D6241','Tensile strength · ASTM D6637'];
+  openModal('Upload geosynthetics test result',
+    `<div class="banner info" style="margin-bottom:12px">Log an independent laboratory result from <b>${geoLab}</b> against the design specification. In production the signed certificate PDF attaches; here, enter the values. Pass/fail is auto-checked and the result is a ledger event. <span class="mute">Prototype: no file is processed.</span></div>
+     <div class="grid g2" style="gap:10px">
+       ${field('Component','<select id="g_comp" class="inp">'+comps+'</select>')}
+       ${field('Sample ID','<input id="g_sample" class="inp" placeholder="S-249">')}</div>
+     ${field('Test · standard','<select id="g_test" class="inp">'+sel(tests)+'</select>')}
+     <div class="grid g3" style="gap:10px">
+       ${field('Measured','<input id="g_meas" class="inp" placeholder="e.g. 31 kN/m">')}
+       ${field('Specification','<input id="g_spec" class="inp" placeholder="e.g. ≥ 29 kN/m">')}
+       ${field('Result','<select id="g_res" class="inp"><option value="pass">Pass</option><option value="fail">Fail</option><option value="pending">Pending</option></select>')}</div>
+     ${field('Certificate ref','<input id="g_cert" class="inp" placeholder="UCT-GS-249">')}`,
+    `<button class="btn sec" id="g_cancel">Cancel</button><button class="btn" id="g_save">📎 Add result</button>`);
+  $('#g_cancel').onclick=closeModal;
+  $('#g_save').onclick=()=>{
+    const comp=$('#g_comp').value, sample=$('#g_sample').value.trim(), t=$('#g_test').value, res=$('#g_res').value;
+    if(!sample){flash('Give the sample an ID');return;}
+    const parts=t.split(' · ');
+    geoTests.unshift({sample, comp, test:parts[0], std:parts[1]||'', measured:$('#g_meas').value.trim()||'—', spec:$('#g_spec').value.trim()||'—', pass:res==='pending'?null:res==='pass', cert:$('#g_cert').value.trim()||'—', date:'Today'});
+    pushEvent('geosynthetic_result','Geosynthetics test logged — '+sample+' ('+comp+') '+parts[0]+' · '+res.toUpperCase()+' · '+geoLab);
+    closeModal(); flash('Result added to the QA record'); render();
+  };
 }
 /* =========================== competency (GISTM IV / M19) =========================== */
 function renderCompetency(){
@@ -5010,39 +5235,410 @@ function addInstrument(){
 
 /* =========================== drone operations (dynamic) =========================== */
 const DM_STATUS={scheduled:['blue','Scheduled'],processing:['amber','Processing'],published:['green','Published'],cancelled:['grey','Cancelled']};
+const SAT_LAYERS=[
+  {img:'truecolor.jpg', name:'True colour', q:'What does the dam look like right now?', shows:'The pond is bright <b>green</b> (algae / turbidity), the tan fan is the exposed <b>tailings beach</b>, and the outer terraces are the <b>embankment lifts</b>. This is the plain photo.'},
+  {img:'ndwi.jpg', name:'Water index (NDWI)', q:'Where is the water, and how big is the pond?', shows:'<b>Deep blue = the supernatant pond (~160 ha)</b>. A separate small blue pool to the east is the return-water dam. Light blue = saturated tailings. This is how we measure pond size every pass.'},
+  {img:'ndvi.jpg', name:'Vegetation index (NDVI)', q:'Is vegetation creeping onto the tailings?', shows:'Bright <b>green streaks</b> show vegetation encroaching onto the deposited tailings (~86 ha, 8.8%) — mostly along the inactive edges. A change to track, not itself a hazard.'},
+  {img:'moisture.jpg', name:'Moisture index (NDMI)', q:'Is the embankment wall wet? (seepage)', shows:'The embankment ring reads <b>red = dry</b>, and the outer slopes are ~94% dry — <b>no widespread seepage signature</b>. Blue is the wet discharge fan and pond. Dry wall = good.'},
+  {img:'falsecolor.jpg', name:'False colour (near-infrared)', q:'Active discharge vs settled tailings?', shows:'<b>Red = living vegetation</b> (invisible clues the eye misses). The bright deposit picks out the <b>fresh discharge fan</b> versus the older settled beach.'},
+  {img:'swir.jpg', name:'Short-wave infrared (SWIR)', q:'Wet slurry vs dry surfaces?', shows:'Separates <b>wet slurry from dry beach</b> and surfaces moisture the eye cannot see — the physics behind the moisture map.'},
+];
+const IC_INFO='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.6h.01"/></svg>';
+const IC_PLAY='<svg viewBox="0 0 24 24" fill="#0b1620" width="20" height="20"><path d="M8 5.5v13l11-6.5z"/></svg>';
+function satLayerModal(l){
+  openModal(l.name+' — Parabola TSF1 · 3 Jul 2026',
+    `<img src="sat/${l.img}" style="width:100%;border-radius:10px;display:block;background:#0b1620"><div class="tiny mute" style="margin-top:10px"><b style="color:#26333f">${l.q}</b><br>${l.shows}</div>`,
+    `<button class="btn sec" id="sl_close">Close</button>`);
+  $('#sl_close').onclick=closeModal;
+}
+/* Framework explainer — behind an ⓘ icon; carries a slot for a walkthrough video. */
+function satFrameworkModal(){
+  const rows=[['True colour','What does it look like right now?','The pond, the beach and the walls — as a photo.'],
+   ['Water (NDWI)','How big is the pond, and is it near the wall?','Blue is water. A growing pond drifting toward the embankment is the danger.'],
+   ['Vegetation (NDVI)','Is greenery creeping onto the tailings?','Green on the deposit = inactive, settling ground. Track the change, not the amount.'],
+   ['Moisture (NDMI)','Is the wall wet? (seepage)','A dry wall (red) is healthy. Wet patches on the outer slope are the warning sign.'],
+   ['Infrared / SWIR','Wet slurry vs dry beach; where is fresh discharge?','Separates the active discharge fan from the older, settled beach.']];
+  openModal('How a satellite reads a dam — the framework',
+    `<div class="tiny mute" style="margin-bottom:12px">A satellite records light in colours the eye can't see. We combine those into <b>indices</b> — each one a simple question about the dam. No image is read alone; together they build the picture.</div>
+     <div class="videoslot"><div class="vplay">${IC_PLAY}</div><div style="font-size:12.8px;font-weight:600;color:#26333f">Explainer video</div><div class="tiny mute">A short walkthrough will play here.</div></div>
+     <table style="margin-top:14px"><thead><tr><th>Satellite view</th><th>The plain question</th><th>What to look for</th></tr></thead><tbody>
+     ${rows.map(([a,q,l])=>`<tr><td style="font-weight:600;white-space:nowrap">${a}</td><td>${q}</td><td class="muted">${l}</td></tr>`).join('')}</tbody></table>`,
+    `<button class="btn sec" id="fw_close">Close</button>`);
+  $('#fw_close').onclick=closeModal;
+}
+/* ---------- SATELLITE-ANALYSIS RULES · standard v1.0 (production) ----------
+   Every measured value is graded against per-facility bands to a DETERMINISTIC band + a
+   fixed plain-language statement — same input → same output, every pass and every facility.
+   Rules are DATA (thresholds are site config, defaults shown); a new facility loads its own
+   bands and the same engine runs — no bespoke logic per dam. Statements are templates, never
+   free text. Full spec: docs/spec/Satellite-Analysis-Rules-v1.0.md. `v` = the measured value
+   for the current scene (Parabola TSF1 · 3 Jul 2026); in production this comes from the pipeline. */
+const SAT_RULES=[
+  {id:'SAT-01', obs:'Supernatant pond', metricLabel:'Pond area as % of facility footprint', v:16.3, unit:'%',
+   comp:'vs_design', dir:'high_bad', bands:{green:15,amber:25}, binds:'RA-01 overtopping', src:'B03, B08 → NDWI',
+   kpi:{icon:'💧', label:'Supernatant pond', big:'160 ha', sub:'{v}% of facility · watch vs freeboard'},
+   stmt:{green:{h:'Pond within the operating envelope', b:'The pond covers {v}% of the facility — inside the operating limit ({green}%). Keep watching it does not grow or drift toward the wall.'},
+         amber:{h:'The pond is the number to watch', b:'~160 ha of water — {v}% of the facility, above the {green}% normal level. The danger is a pond that grows or drifts toward the wall and eats the freeboard (the Merriespruit mechanism). Verify freeboard at the gauge board and check the drawdown protocol.'},
+         red:{h:'Pond over the operating limit', b:'The pond is at {v}% of the facility — above the {amber}% action level. Freeboard is at risk; engage the drawdown protocol and the Engineer of Record.'}}},
+  {id:'SAT-02', obs:'Beach width (water-to-wall buffer)', metricLabel:'Exposed beach as % of facility', v:62.6, unit:'%',
+   comp:'vs_baseline', dir:'low_bad', bands:{green:40,amber:25}, binds:'RA-01 / RA-02', src:'NDWI + NDVI',
+   kpi:{icon:'🏖️', label:'Exposed beach', big:'613 ha', sub:'{v}% · keeps water off the wall'},
+   stmt:{green:{h:'A wide beach is protecting the wall', b:'~613 ha of exposed beach ({v}% of the facility) separates the water from the embankment — a healthy safety buffer. The metric to watch is whether it shrinks over time.'},
+         amber:{h:'The beach is narrowing', b:'The beach is down to {v}% — the buffer between water and wall is thinning. Confirm the pond is not migrating toward the embankment.'},
+         red:{h:'Beach lost — water near the wall', b:'The beach is down to {v}% — the water is close to the wall. This is the Merriespruit geometry; escalate to the Engineer of Record.'}}},
+  {id:'SAT-03', obs:'Vegetation encroachment', metricLabel:'Vegetated tailings as % of surface', v:8.8, unit:'%',
+   comp:'vs_baseline', dir:'high_bad', bands:{green:15,amber:30}, binds:'monitoring', src:'B04, B08 → NDVI',
+   kpi:{icon:'🌿', label:'Vegetation encroach', big:'86 ha', sub:'{v}% of the tailings surface'},
+   stmt:{green:{h:'Vegetation encroachment is normal', b:'Vegetation covers {v}% of the tailings surface — below the {green}% level. It marks where deposition has paused; track the change, not the amount, as it can hide the surface from a visual round.'},
+         amber:{h:'Vegetation is creeping onto the tailings', b:'Vegetation has reached {v}% of the surface — a notable change from baseline. It can mask the surface from a visual round; flag the affected zones for a ground check.'},
+         red:{h:'Extensive vegetation on the tailings', b:'Vegetation is at {v}% of the surface — extensive. Re-survey the affected zones on the ground.'}}},
+  {id:'SAT-04', obs:'Embankment moisture (downstream face)', metricLabel:'% of the outer slope wet (NDMI > 0)', v:5.7, unit:'%',
+   comp:'absolute', dir:'high_bad', bands:{green:10,amber:25}, binds:'RA-03 / RA-04', src:'B08, B11 → NDMI',
+   kpi:{icon:'🧱', label:'Embankment', big:'Dry', sub:'outer slope {v}% wet · no seepage'},
+   stmt:{green:{h:'The wall looks dry — the best news', b:'The embankment reads dry from space — {v}% of the outer slope shows moisture, below the {green}% level. A wet wall is the early sign of seepage and internal erosion, so dry is what you want to see.'},
+         amber:{h:'Moisture showing on the wall', b:'{v}% of the outer slope shows moisture — above the {green}% normal level. Corroborate with a seepage round and the toe piezometers before escalating.'},
+         red:{h:'Wet wall — seepage signature', b:'{v}% of the outer slope reads wet — above the {amber}% action level. Escalate to the Engineer of Record; a wet downstream face is the seepage / piping signal.'}}},
+];
+/* Scene history — the platform receives curated satellite passes at least twice a year.
+   Each pass carries the measured value per rule; the rules re-grade against the selected pass,
+   and the trend across passes is the real signal. (Newest first; only the latest has imagery here.) */
+const SAT_SCENES=[
+  {id:'S-2026-07', date:'3 Jul 2026',  label:'Jul 2026', cloud:0, hasImg:true,  vals:{'SAT-01':16.3,'SAT-02':62.6,'SAT-03':8.8,'SAT-04':5.7,'SAT-05':4,'SAT-06':9.9,'SAT-07':14}},
+  {id:'S-2026-01', date:'18 Jan 2026', label:'Jan 2026', cloud:4, hasImg:false, vals:{'SAT-01':14.1,'SAT-02':65.0,'SAT-03':7.5,'SAT-04':4.2,'SAT-05':3,'SAT-06':8.1,'SAT-07':12}},
+  {id:'S-2025-07', date:'11 Jul 2025', label:'Jul 2025', cloud:2, hasImg:false, vals:{'SAT-01':12.8,'SAT-02':66.8,'SAT-03':6.9,'SAT-04':3.8,'SAT-05':3,'SAT-06':7.2,'SAT-07':11}},
+];
+/* Methane monitoring (CH₄) — an ENVIRONMENTAL / ESG layer, not a dam-safety failure mode. Kept
+   as another satellite view. Relevance depends on tailings type (organic content); illustrative
+   until a Sentinel-5P / GHGSat feed is connected. */
+const SAT_METHANE={id:'SAT-07', module:'CH₄', obs:'Methane monitoring', metricLabel:'CH₄ column enhancement over background', unit:' ppb',
+  comp:'vs_baseline', dir:'high_bad', bands:{green:25,amber:60}, binds:'Environmental / ESG', src:'Sentinel-5P TROPOMI (regional) · GHGSat / EMIT (facility plumes)', illustrative:true, env:true, viz:'methane', tab:'CH₄ · Methane',
+  note:'Illustrative — needs a satellite methane feed. TROPOMI (~7 km) gives regional context; GHGSat / EMIT resolve facility-scale plumes. Relevance is <b>environmental / ESG</b> (fugitive emissions) — highest for tailings with organic content (coal, oil-sands); a hard-rock metals TSF usually emits little.',
+  kpi:{icon:'💨', label:'Methane (CH₄)', big:'+{v} ppb', sub:'above background · ESG layer'},
+  stmt:{green:{h:'No methane enhancement — clean', b:'CH₄ over the facility is +{v} ppb above background, below the +{green} ppb level. No fugitive-emission signal — expected for a low-organic tailings facility.'},
+        amber:{h:'Methane enhancement detected', b:'CH₄ is +{v} ppb above background — above the +{green} ppb level. Investigate the source (decant, organic content, nearby operations) and log for the ESG report.'},
+        red:{h:'Strong methane plume', b:'CH₄ is +{v} ppb above background — above the +{amber} ppb action level. Ground-verify the plume and report the fugitive emission.'}}};
+/* Phase 2 satellite analytics — same rule schema, additional data streams. M06 is computed from
+   the red-edge/SWIR bands supplied; M04 needs a Sentinel-1 radar series (illustrative here). */
+const SAT_P2=[
+  {id:'SAT-05', module:'M04', obs:'Ground deformation (InSAR)', metricLabel:'Line-of-sight wall displacement rate', unit:' mm/yr',
+   comp:'vs_design', dir:'high_bad', bands:{green:10,amber:30}, binds:'RA-02 slope', src:'Sentinel-1 C-band SAR · PSI', illustrative:true, viz:'insar', tab:'M04 · InSAR',
+   adds:'Millimetre-scale wall movement between the optical passes — the slope-instability signal optical imagery cannot see.',
+   kpi:{icon:'📡', label:'Wall displacement', big:'{v} mm/yr', sub:'line-of-sight · within design'},
+   stmt:{green:{h:'The wall is not moving — stable', b:'Line-of-sight displacement is {v} mm/yr, below the {green} mm/yr design limit. Steady is what you want; with movement, the rate matters more than the amount.'},
+         amber:{h:'Movement rate is rising', b:'Displacement is {v} mm/yr — above the {green} mm/yr normal level. Watch the trend; an accelerating rate is the slope-failure precursor.'},
+         red:{h:'Accelerating wall movement', b:'Displacement is {v} mm/yr — above the {amber} mm/yr action level. Escalate to the Engineer of Record immediately; this is the slope-instability signature.'}}},
+  {id:'SAT-06', module:'M06', obs:'Seepage analytics (red-edge / SWIR)', metricLabel:'% of downstream face with a wet + vigorous-vegetation seepage signature', unit:'%',
+   comp:'vs_baseline', dir:'high_bad', bands:{green:10,amber:25}, binds:'RA-04 seepage', src:'B05 red-edge · B08 · B11 SWIR', viz:'m06_seepage.jpg', tab:'M06 · Seepage',
+   adds:'Seepage that shows as vegetation vigour and moisture lines on the downstream face — before it becomes a visible wet patch.',
+   kpi:{icon:'🌿', label:'Seepage signature', big:'{v}%', sub:'of downstream face flagged'},
+   stmt:{green:{h:'No seepage signature on the face', b:'Only {v}% of the downstream face shows a wet + vigorous-vegetation signature, below the {green}% level — consistent with the dry-wall reading. Scattered patches; track against baseline.'},
+         amber:{h:'Seepage lines emerging on the face', b:'{v}% of the downstream face now shows a seepage signature — above the {green}% level. Ground-check the flagged zones and the toe drains.'},
+         red:{h:'Extensive seepage signature', b:'{v}% of the face flagged — above the {amber}% action level. Escalate; corroborate with the piezometers and a seepage round.'}}},
+];
+/* Response-workflow templates — one per satellite finding. When a finding reaches its trigger
+   band, these steps are the response, ordered by ACTIONABILITY: 1 human (fastest — a WhatsApp
+   round today), 2 drone (cm detail on the flagged spot, same day), 3 sensors (confirm, but often
+   fixed / hard to deploy). Every step is user-configurable (enable, trigger band, action text). */
+const WF_STREAMS={
+  human:{ic:'👤', label:'Human — manual round', note:'most actionable · dispatched today over WhatsApp'},
+  drone:{ic:'🚁', label:'Drone — targeted flight', note:'cm detail on the flagged spot · same day, weather permitting'},
+  sensor:{ic:'📡', label:'Sensors — telemetry', note:'confirms continuously, but often fixed / hard to deploy'},
+};
+const SAT_WF={
+  'SAT-01':{steps:[
+    {stream:'human', on:true, band:'amber', act:'Dispatch a field round: read the gauge-board freeboard and walk the pond edge for encroachment toward the wall.'},
+    {stream:'drone', on:true, band:'amber', act:'Task a photogrammetry flight to measure pond-to-wall distance against the FoS criterion.'},
+    {stream:'sensor', on:true, band:'red',   act:'Check pond-level and decant-flow telemetry; deploy a temporary level logger if the trend is unclear.'}]},
+  'SAT-02':{steps:[
+    {stream:'human', on:true, band:'amber', act:'Walk the beach and measure the water-to-wall distance at the narrowest point.'},
+    {stream:'drone', on:true, band:'amber', act:'Fly a DEM to quantify beach distance vs the critical FoS distance.'},
+    {stream:'sensor', on:false,band:'red',   act:'Cross-check against the pond-level trend (no fixed beach sensor here).'}]},
+  'SAT-03':{steps:[
+    {stream:'human', on:true, band:'amber', act:'Ground-check the encroached zones: is vegetation hiding cracking or seepage on the surface?'},
+    {stream:'drone', on:true, band:'amber', act:'Capture high-res imagery of the encroached area to map extent and change vs baseline.'},
+    {stream:'sensor', on:false,band:'red',   act:'No fixed sensor applies; rely on the visual streams.'}]},
+  'SAT-04':{steps:[
+    {stream:'human', on:true, band:'amber', act:'Seepage round: inspect the flagged wall section, photograph, and score clarity / flow.'},
+    {stream:'drone', on:true, band:'amber', act:'Fly the downstream face (RGB / thermal) to map the wet extent.'},
+    {stream:'sensor', on:true, band:'amber', act:'Read the toe piezometers (P-04 / P-07); deploy one near the flag if none is close (often difficult).'}]},
+  'SAT-05':{steps:[
+    {stream:'human', on:true, band:'amber', act:'Survey the crest and toe at the flagged section for cracking, settlement or misalignment.'},
+    {stream:'drone', on:true, band:'amber', act:'Fly a DEM to quantify the displacement independently of the radar.'},
+    {stream:'sensor', on:true, band:'amber', act:'Check GNSS-2 / inclinometer; add a monitoring point if none is near (fixed, hard to relocate).'}]},
+  'SAT-06':{steps:[
+    {stream:'human', on:true, band:'amber', act:'Seepage round on the flagged downstream-face zones; photograph and score clarity.'},
+    {stream:'drone', on:true, band:'amber', act:'High-res / thermal flight over the flagged seepage lines.'},
+    {stream:'sensor', on:true, band:'amber', act:'Read the nearest piezometers; deploy a shallow one on the flagged line if feasible.'}]},
+  'SAT-07':{steps:[
+    {stream:'human', on:true, band:'amber', act:'Ground gas-survey / leak-detection walk over the flagged area; sample if a source is found.'},
+    {stream:'drone', on:true, band:'amber', act:'Fly a drone-mounted methane sniffer (TDLAS) over the plume to localise the source.'},
+    {stream:'sensor', on:true, band:'red',   act:'Check / deploy a fixed methane monitor near the source (often fixed / hard to relocate).'}]},
+};
+function wfSummary(rid){return (SAT_WF[rid]?SAT_WF[rid].steps.filter(s=>s.on):[]).map(s=>WF_STREAMS[s.stream].ic).join(' ');}
+const bandRank={green:0,amber:1,red:2};
+let satSceneIdx=0;
+function curScene(){return SAT_SCENES[satSceneIdx];}
+function bandOf(r,v){return r.dir==='low_bad'?(v>=r.bands.green?'green':v>=r.bands.amber?'amber':'red'):(v<r.bands.green?'green':v<r.bands.amber?'amber':'red');}
+function evalSatRule(r){
+  const v=curScene().vals[r.id], b=r.bands, band=bandOf(r,v);
+  const tl={green:'good',amber:'amber',red:'bad'}[band];
+  const fill=s=>String(s).replace(/{v}/g,v).replace(/{green}/g,b.green).replace(/{amber}/g,b.amber);
+  return {v, band, tl, head:fill(r.stmt[band].h), body:fill(r.stmt[band].b), kbig:fill(r.kpi.big), ksub:fill(r.kpi.sub)};
+}
+function satRulesModal(){
+  const bandtxt=r=> r.dir==='low_bad' ? `≥${r.bands.green} green · ${r.bands.amber}–${r.bands.green} amber · <${r.bands.amber} red`
+                                      : `<${r.bands.green} green · ${r.bands.green}–${r.bands.amber} amber · >${r.bands.amber} red`;
+  openModal('Satellite grading rules — standard v1.0',
+    `<div class="tiny mute" style="margin-bottom:12px">Every number on this page is graded against these rules to a fixed band and a fixed statement — <b>same input, same output, every pass and every facility</b>. Thresholds are site-configured (defaults shown) and gated by storage method + consequence class. This is the standard the backend implements — full spec in the developer handover.</div>
+     <table><thead><tr><th>ID</th><th>Observable</th><th>Measured</th><th>Bands (site-set)</th><th>Basis</th><th>Feeds</th></tr></thead><tbody>
+     ${SAT_RULES.map(r=>{const e=evalSatRule(r);const c={good:'green',amber:'amber',bad:'red'}[e.tl];
+       return `<tr><td class="mono">${r.id}</td>
+         <td style="font-weight:600">${r.obs}<br><span class="pill ${c}" style="padding:0 7px"><span class="dot"></span>${e.band} · ${e.v}${r.unit}</span></td>
+         <td class="muted" style="font-size:11.5px">${r.metricLabel}<div class="tiny mute">${r.src}</div></td>
+         <td class="tiny mono">${bandtxt(r)}</td>
+         <td class="tiny">${r.comp.replace('_',' ')}</td>
+         <td class="tiny muted">${r.binds}</td></tr>`;}).join('')}
+     </tbody></table>
+     <div class="banner info" style="margin-top:12px"><b>Standardised & scalable.</b> Rules are data, not code. A new facility loads its own thresholds (or the defaults) and the same engine runs — no bespoke logic per dam. Comparators follow the MAC scale (vs design / vs baseline / absolute); site calibration is recorded as audit evidence (ADR 0005). Statements are templates, so the plain-language output is auditable and identical for identical inputs.</div>`,
+    `<button class="btn sec" id="sr_close">Close</button>`);
+  $('#sr_close').onclick=closeModal;
+}
+function satAddPassModal(){
+  if(!canAct()){flash('Read-only role — adding a pass needs SHEQ / EoR');return;}
+  openModal('Add a satellite pass',
+    `<div class="banner info" style="margin-bottom:12px">Curated passes are supplied <b>at least twice a year</b>. In production, dropping the scene here runs the pipeline automatically — cloud / fitness gate → NDWI · NDVI · NDMI → the grading rules → a new column on the trend. <span class="mute">Prototype: this is where the ingest UI lives; no file is processed.</span></div>
+     ${field('Pass date','<input id="ap_date" type="date" class="inp">')}
+     ${field('Imagery source','<input id="ap_src" class="inp" value="Sentinel-2 L2A">')}
+     <div class="fld"><label>Scene</label><div class="videoslot" style="aspect-ratio:auto;padding:22px 16px;flex-direction:row;gap:14px"><span style="font-size:24px">📥</span><div style="text-align:left"><div style="font-size:12.8px;font-weight:600;color:#26333f">Drop the scene bands or a Sentinel Hub export</div><div class="tiny mute">GeoTIFF bands (B02–B12) — processed to the four measures and graded automatically.</div></div></div></div>`,
+    `<button class="btn sec" id="ap_cancel">Cancel</button><button class="btn" id="ap_add">Queue for processing</button>`);
+  $('#ap_cancel').onclick=closeModal;
+  $('#ap_add').onclick=()=>{closeModal(); flash('Pass queued — the pipeline would grade it and add it to the trend');};
+}
+function insarSVG(W,H){
+  W=W||720;H=H||300; const b=baseMapShapes(W,H);
+  const X=x=>+(b.pad+x*(W-2*b.pad)).toFixed(1), Y=y=>+(b.pad+y*(H-2*b.pad)).toFixed(1);
+  const pts=[[.15,.25,'g'],[.35,.16,'g'],[.6,.15,'g'],[.82,.28,'g'],[.9,.5,'g'],[.83,.75,'g'],[.6,.86,'g'],[.36,.87,'a'],[.15,.76,'g'],[.09,.5,'g'],[.28,.5,'g'],[.72,.62,'g']];
+  const col={g:'#34d399',a:'#fbbf24',r:'#f87171'};
+  const dots=pts.map(([x,y,c])=>`<g><title>PS point · ${c==='g'?'stable':'watch'}</title><circle cx="${X(x)}" cy="${Y(y)}" r="4.5" fill="${col[c]}" stroke="#06121b" stroke-width="1"/></g>`).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}">${b.frame}${b.crest}${b.pond}${dots}
+    <text x="${b.pad+6}" y="${b.pad+15}" fill="#7fa0b5" font-size="11">PS points · line-of-sight velocity</text>
+    <text x="${W-b.pad-6}" y="${H-b.pad-8}" fill="#5f7688" font-size="10" text-anchor="end">Sentinel-1 · illustrative</text></svg>`;
+}
+function methaneSVG(W,H){
+  W=W||720;H=H||300; const pad=30, iw=W-2*pad-16, cols=18, rows=10, cw=iw/cols, chh=(H-2*pad)/rows;
+  const cx=0.44, cy=0.56;
+  const ch4=(fx,fy)=>8+52*Math.exp(-(((fx-cx)*(fx-cx))+((fy-cy)*(fy-cy)))/0.045);
+  const STOPS=[[59,130,246],[45,212,191],[132,204,22],[250,204,21],[239,68,68]];
+  const ramp=v=>{const t=Math.max(0,Math.min(1,v/60)),x=t*(STOPS.length-1),i=Math.min(STOPS.length-2,Math.floor(x)),f=x-i,c=STOPS[i].map((a,k)=>Math.round(a+(STOPS[i+1][k]-a)*f));return `rgb(${c[0]},${c[1]},${c[2]})`;};
+  let cells='';
+  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){const fx=(c+0.5)/cols,fy=(r+0.5)/rows;
+    cells+=`<rect x="${(pad+c*cw).toFixed(1)}" y="${(pad+r*chh).toFixed(1)}" width="${(cw+0.6).toFixed(1)}" height="${(chh+0.6).toFixed(1)}" fill="${ramp(ch4(fx,fy))}" opacity="0.9"/>`;}
+  let bar='';for(let i=0;i<40;i++){bar+=`<rect x="${W-pad-9}" y="${(pad+i*(H-2*pad)/40).toFixed(1)}" width="9" height="${((H-2*pad)/40+0.8).toFixed(1)}" fill="${ramp(60-(i/40)*60)}"/>`;}
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}"><rect width="${W}" height="${H}" fill="#0b1620"/>${cells}
+    <rect x="${pad}" y="${pad}" width="${iw}" height="${H-2*pad}" fill="none" stroke="#1f3a4f"/>${bar}
+    <text x="${W-pad-11}" y="${pad-4}" fill="#9fb3c6" font-size="9" text-anchor="end">+60</text>
+    <text x="${W-pad-11}" y="${H-pad+13}" fill="#9fb3c6" font-size="9" text-anchor="end">+0 ppb</text>
+    <text x="${pad+6}" y="${pad+15}" fill="#eaf2f8" font-size="11" font-family="ui-monospace,Menlo,monospace">CH₄ column enhancement (ppb)</text>
+    <text x="${pad+6}" y="${H-pad-8}" fill="#9fb3c6" font-size="10">GHGSat / TROPOMI · illustrative</text></svg>`;
+}
+function renderP2Module(r){
+  const e=evalSatRule(r);
+  const viz = r.viz==='insar' ? insarSVG(720,300) : `<img src="sat/${r.viz}" style="width:100%;border-radius:10px;display:block;background:#0b1620">`;
+  const bandtxt = r.dir==='low_bad'?`≥${r.bands.green} / ${r.bands.amber}–${r.bands.green} / <${r.bands.amber}`:`<${r.bands.green} / ${r.bands.green}–${r.bands.amber} / >${r.bands.amber}`;
+  const card=h(`<div class="card mb">
+    <div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <div><h2>${r.module} · ${r.obs}</h2><div class="tiny mute" style="margin-top:2px;max-width:600px">${r.adds}</div></div>
+      <div class="row" style="gap:6px;align-items:flex-start"><span class="pill green"><span class="dot"></span>Activated</span>${r.illustrative?'<span class="pill grey">illustrative</span>':'<span class="pill blue">computed</span>'}</div></div>
+    <div class="grid" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:start;margin-top:12px">
+      <div class="chart" style="margin:0">${viz}</div>
+      <div><div class="satname">${r.id} · ${r.metricLabel}</div>
+        <div class="srow" style="border-top:none;padding-top:8px"><span class="tl ${e.tl}" style="margin-top:5px"></span><div class="grow"><div class="t" style="font-size:13px;color:#26333f">${e.head}</div><div class="s">${e.body}</div></div></div>
+        <div class="kv"><span class="k">Source</span><span class="v">${r.src}</span></div>
+        <div class="kv"><span class="k">Bands (site-set)</span><span class="v mono" style="font-size:11px">${bandtxt} ${r.unit.trim()}</span></div>
+        <div class="kv"><span class="k">Comparator · feeds</span><span class="v">${r.comp.replace('_',' ')} · ${r.binds}</span></div>
+        ${r.illustrative?'<div class="banner warn" style="margin-top:10px">Illustrative output — the InSAR module needs a <b>Sentinel-1 radar series</b> (≥1 season) to compute a real displacement rate. The rule, thresholds, PS-point map and grading are in place; the number is a placeholder until the radar stack is supplied.</div>':'<div class="banner info" style="margin-top:10px">Computed from the bands you supplied — the orange flags are the wet + vigorous-vegetation seepage signature on the downstream face.</div>'}
+        <div style="margin-top:10px"><button class="btn ${(e.band!=='green')?'sec':'ghost'} sm wfbtn" data-r="${r.id}">⚙ Response workflow ${wfSummary(r.id)}${e.band!=='green'?' · <b>active</b>':''}</button></div>
+      </div></div></div>`);
+  const wb=card.querySelector('.wfbtn'); if(wb)wb.onclick=()=>satWorkflowModal(r.id);
+  return card;
+}
+function runWfStep(r, step){
+  const e=evalSatRule(r);
+  if(step.stream==='human'){ issueJobCard({source:'alert', scope:'Satellite '+r.id+' — '+r.obs, priority:e.band==='red'?'urgent':'elevated', note:step.act}); }
+  else if(step.stream==='drone'){ closeModal(); pushEvent('drone_flight','Drone flight tasked from satellite finding '+r.id+' — '+r.obs); flash('Drone flight tasked to the flagged area'); }
+  else { closeModal(); state.view='instruments'; render(); flash('Opened instruments — check the telemetry for '+r.id); }
+}
+function satWorkflowModal(rid){
+  const r=[...SAT_RULES,...SAT_P2,SAT_METHANE].find(x=>x.id===rid), wf=SAT_WF[rid];
+  function readInputs(){document.querySelectorAll('.wf_act').forEach(i=>{const s=wf.steps[+i.dataset.i]; if(i.value.trim())s.act=i.value.trim();}); document.querySelectorAll('.wf_band').forEach(sl=>wf.steps[+sl.dataset.i].band=sl.value);}
+  function show(){
+    const e=evalSatRule(r), active=e.band!=='green';
+    const rows=wf.steps.map((s,i)=>{const st=WF_STREAMS[s.stream]; const fires=active&&s.on&&bandRank[e.band]>=bandRank[s.band];
+      return `<div class="wfstep ${s.on?'':'off'}">
+        <div class="row" style="justify-content:space-between;align-items:center;gap:8px">
+          <div class="row" style="gap:9px;align-items:center"><span class="wfrank">${i+1}</span><span style="font-size:17px">${st.ic}</span><div><div class="t" style="font-size:12.8px;color:#26333f">${st.label}</div><div class="tiny mute">${st.note}</div></div></div>
+          <label class="row" style="gap:6px;cursor:pointer"><input type="checkbox" class="wf_on" data-i="${i}" ${s.on?'checked':''}> <span class="tiny mute">enabled</span></label></div>
+        <div class="grid g2" style="gap:8px;margin-top:9px">
+          <input class="inp wf_act" data-i="${i}" value="${s.act.replace(/"/g,'&quot;')}" ${s.on?'':'disabled'}>
+          <select class="inp wf_band" data-i="${i}" ${s.on?'':'disabled'}><option value="amber" ${s.band==='amber'?'selected':''}>trigger at amber or red</option><option value="red" ${s.band==='red'?'selected':''}>trigger at red only</option></select></div>
+        ${fires?`<div style="margin-top:9px"><button class="btn sm wf_do" data-i="${i}">${s.stream==='human'?'💬 Dispatch round':s.stream==='drone'?'🚁 Task flight':'📡 Check sensors'}</button></div>`:''}</div>`;}).join('');
+    openModal('Response workflow — '+r.id+' · '+r.obs,
+      `<div class="banner ${active?'warn':'info'}" style="margin-bottom:12px">This finding is <b>${e.band}</b>. ${active?'The workflow is <b>active</b> — the enabled, triggered steps below can be dispatched now.':'On standby — it activates when the finding reaches a step\'s trigger band.'} Steps run <b>most-actionable first</b>: human (fastest to deploy), then drone, then sensors (often fixed / hard to deploy). Toggle, re-order by priority, edit the action or the trigger — this template is yours to configure.</div>
+       ${rows}`,
+      `<button class="btn sec" id="wf_close">Close</button><button class="btn" id="wf_save">Save workflow</button>`);
+    document.querySelectorAll('.wf_on').forEach(c=>c.onchange=()=>{readInputs(); wf.steps[+c.dataset.i].on=c.checked; show();});
+    document.querySelectorAll('.wf_do').forEach(b=>b.onclick=()=>{readInputs(); runWfStep(r, wf.steps[+b.dataset.i]);});
+    $('#wf_close').onclick=closeModal;
+    $('#wf_save').onclick=()=>{readInputs(); pushEvent('workflow_configured','Response workflow saved for '+r.id+' — '+wf.steps.filter(s=>s.on).map(s=>s.stream).join(' → ')); closeModal(); flash('Workflow saved for '+r.id); if(state.view==='satops')renderSatelliteOps();};
+  }
+  show();
+}
 function renderSatelliteOps(){
   const v=$('#view'); v.innerHTML='';
-  v.appendChild(h(`<div class="banner warn">🛰️ <b>Interim placeholder — a full build-out is planned.</b> Satellite operations will become the control room for the EO stream: AOI tasking, scene acquisition, cloud screening, site calibration and the M05 analytics pipeline. For now this shows what already flows in (Sentinel-2 scenes) and what is on the roadmap. Published pond / beach / freeboard metrics live in <b>Water &amp; freeboard</b>.</div>`));
+  const sc=curScene();
+  v.appendChild(h(`<div class="banner info">🛰️ <b>Parabola TSF1 — satellite pass ${sc.date}.</b> Curated Sentinel-2 passes are supplied <b>at least twice a year</b>; each is turned from raw light into a picture of the dam's health that anyone can read. Pick a pass below to grade it, or open the <b>Trend across passes</b> — a pond or wet wall creeping up over time is the real signal.</div>`));
 
-  const pub=satelliteScenes.filter(s=>s.status==='published').length;
-  const withheld=satelliteScenes.filter(s=>s.status==='withheld'||s.status==='rejected').length;
-  const last=satelliteScenes.find(s=>s.status==='published')||satelliteScenes[0];
+  // Scene selector — the passes over time (newest first)
+  const sel=h(`<div class="card mb" style="padding:12px 14px"><div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+      <div><span class="tiny mute" style="font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#526277">Satellite passes</span>
+        <div class="tiny mute" style="margin-top:2px">Supplied ≥ twice a year · showing the last ${SAT_SCENES.length} · <b>${sc.date}</b> selected</div></div>
+      ${canAct()?'<button class="btn sec sm" id="satAddPass">+ Add a pass</button>':''}</div>
+    <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:10px" id="satScenes"></div></div>`);
+  const scRow=sel.querySelector('#satScenes');
+  SAT_SCENES.forEach((s,i)=>{const on=i===satSceneIdx;
+    const b=h(`<button class="lyr ${on?'on':''}" data-i="${i}" style="flex-direction:column;align-items:flex-start;gap:1px;padding:8px 13px">
+      <span style="font-weight:700;font-size:12px;color:${on?'#26333f':'var(--ink-dim)'}">${s.date}</span>
+      <span class="tiny mute">${i===0?'latest':'archive'} · ${s.cloud}% cloud</span></button>`);
+    b.onclick=()=>{satSceneIdx=i;renderSatelliteOps();};
+    scRow.appendChild(b);});
+  v.appendChild(sel);
+  const ap=sel.querySelector('#satAddPass'); if(ap)ap.onclick=satAddPassModal;
+
+  // KPI grid — graded from the rules for the SELECTED pass (band → colour)
   const grid=h(`<div class="grid g4 mb"></div>`);
-  grid.appendChild(h(`<div class="stat good"><div class="lab">Next pass</div><div class="num" style="font-size:19px;padding-top:9px">~3 days</div><div class="sub">Sentinel-2 · ~5-day revisit</div></div>`));
-  grid.appendChild(h(`<div class="stat good"><div class="lab">Scenes published</div><div class="num">${pub}</div><div class="sub">last ${last.date}</div></div>`));
-  grid.appendChild(h(`<div class="stat ${withheld?'warn':'good'}"><div class="lab">Withheld / rejected</div><div class="num">${withheld}</div><div class="sub">cloud or fitness gate</div></div>`));
-  grid.appendChild(h(`<div class="stat good"><div class="lab">Resolution</div><div class="num" style="font-size:19px;padding-top:9px">10 m</div><div class="sub">optical · L2A surface reflectance</div></div>`));
+  SAT_RULES.forEach(r=>{const e=evalSatRule(r);
+    grid.appendChild(h(`<div class="stat ${e.tl==='good'?'good':e.tl==='amber'?'warn':'bad'}"><div class="lab">${r.kpi.icon} ${r.kpi.label}</div><div class="num" style="font-size:20px;padding-top:${e.kbig.length>6?'8px':'0'}">${e.kbig}</div><div class="sub">${e.ksub}</div></div>`));});
   v.appendChild(grid);
 
-  v.appendChild(aoiCard('AOI & tasking','The area of interest the pipeline requests scenes for. Full tasking controls — bounding box, MGRS tile, acquisition cadence, priority tasking — arrive with the build-out.'));
+  // What it means — plain-language read, generated from the rules (deterministic, standardised)
+  const meaning=h(`<div class="card mb"><div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+      <div><h2>What this means for the dam — in plain English</h2>
+      <div class="tiny mute" style="margin-top:2px">Graded automatically against the site's satellite-analysis rules — <b>same input, same output, every pass</b>. No hand-written prose.</div></div>
+      <button class="infobtn" id="srInfo">${IC_INFO} Grading rules · v1.0</button></div></div>`);
+  SAT_RULES.forEach(r=>{const e=evalSatRule(r); const active=e.band!=='green';
+    const row=h(`<div class="srow"><span class="tl ${e.tl}" style="margin-top:5px"></span><div class="grow">
+      <div class="t" style="font-size:13px;color:#26333f">${e.head} <span class="tag2" style="margin-left:4px">${r.id}</span></div>
+      <div class="s">${e.body}</div>
+      <div style="margin-top:7px"><button class="btn ${active?'sec':'ghost'} sm wfbtn" data-r="${r.id}">⚙ Response workflow ${wfSummary(r.id)}${active?' · <b>active</b>':''}</button></div></div></div>`);
+    row.querySelector('.wfbtn').onclick=()=>satWorkflowModal(r.id);
+    meaning.appendChild(row);});
+  v.appendChild(meaning);
+  meaning.querySelector('#srInfo').onclick=satRulesModal;
 
-  v.appendChild(h(`<h2 style="margin:8px 2px 8px;color:var(--ink-dim);font-size:11.5px;letter-spacing:.5px;text-transform:uppercase">Scene acquisition — recent (status flowing in)</h2>`));
-  const tbl=h(`<div class="card mb" style="padding:6px 6px 2px"><table><thead><tr><th>Date</th><th>Cloud</th><th>Result</th><th>Status</th></tr></thead><tbody></tbody></table></div>`);
-  satelliteScenes.forEach(s=>tbl.querySelector('tbody').appendChild(h(`<tr><td class="mono">${s.date}</td><td>${s.cloud}%</td><td>${s.metric}</td><td>${wPill(s.status)}</td></tr>`)));
-  v.appendChild(tbl);
+  // Trend across passes — the payoff of repeat imagery (oldest → newest)
+  const chrono=[...SAT_SCENES].reverse();
+  const trend=h(`<div class="card mb" style="padding:6px 6px 2px"><div style="padding:10px 10px 4px"><h2 style="margin:0">Trend across passes — why we watch over time</h2>
+      <div class="tiny mute" style="margin-top:2px">Every measure across the ${SAT_SCENES.length} supplied passes. A value creeping into a worse band is the early warning a single snapshot can't give.</div></div>
+    <table><thead><tr><th>Measure</th>${chrono.map(s=>`<th>${s.label}</th>`).join('')}<th>Trend</th></tr></thead><tbody></tbody></table></div>`);
+  [...SAT_RULES,...SAT_P2].forEach(r=>{
+    const cells=chrono.map(s=>{const val=s.vals[r.id],bd=bandOf(r,val),c={green:'green',amber:'amber',red:'red'}[bd];
+      return `<td><span class="pill ${c}" style="padding:1px 8px">${val}${r.unit}</span></td>`;}).join('');
+    const first=chrono[0].vals[r.id], last=chrono[chrono.length-1].vals[r.id], d=last-first;
+    const worse = r.dir==='low_bad' ? d<-0.3 : d>0.3;
+    const better = r.dir==='low_bad' ? d>0.3 : d<-0.3;
+    const tr = Math.abs(d)<0.3 ? ['#8aa0b2','→ stable'] : worse ? ['#d97706', (d>0?'↑':'↓')+' worsening'] : ['#059669',(d>0?'↑':'↓')+' improving'];
+    trend.querySelector('tbody').appendChild(h(`<tr><td style="font-weight:600">${r.kpi.icon} ${r.kpi.label} <span class="tag2">${r.module?r.module:r.id}</span></td>${cells}<td style="color:${tr[0]};font-weight:600;white-space:nowrap">${tr[1]}</td></tr>`));});
+  v.appendChild(trend);
+
+  // Phase 2 analytics — executed: InSAR (M04) + red-edge/SWIR seepage (M06)
+  const p2sec=h(`<div class="card mb" style="border-color:rgba(136,189,242,.4)">
+    <div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <div><h2>🛰️ Phase 2 analytics — now running</h2>
+      <div class="tiny mute" style="margin-top:2px;max-width:640px">Two extra eyes on the failure modes optical can't fully see: <b>InSAR</b> for millimetre wall movement (M04) and <b>red-edge / SWIR seepage</b> on the downstream face (M06). Graded on the same rules standard, trended above, and now feeding the fusion coverage matrix — <b>open them in the views below</b>.</div></div>
+      <span class="pill green"><span class="dot"></span>Executed · 2 modules</span></div>
+    <div class="grid g2" style="margin-top:14px" id="p2grid"></div></div>`);
+  SAT_P2.forEach(r=>{const e=evalSatRule(r);
+    p2sec.querySelector('#p2grid').appendChild(h(`<div class="stat ${e.tl==='good'?'good':e.tl==='amber'?'warn':'bad'}" style="box-shadow:none"><div class="lab">${r.kpi.icon} ${r.kpi.label} · ${r.module}</div><div class="num" style="font-size:20px">${e.kbig}</div><div class="sub">${e.ksub}</div></div>`));});
+  v.appendChild(p2sec);
+
+  // Satellite views — ONE tabbed viewer: the optical layers AND the Phase 2 modules (M04 / M06)
+  v.appendChild(h(`<h2 style="${SUBHEAD}">The satellite views — ${sc.date}</h2>`));
+  const VIEWS=[...SAT_LAYERS.map(l=>({type:'opt',l,tab:l.name})), ...SAT_P2.map(r=>({type:'p2',r,tab:r.tab})), {type:'p2',r:SAT_METHANE,tab:SAT_METHANE.tab}];
+  const viewer=h(`<div class="card mb">
+    <div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+      <div class="tiny mute">Click a tab to switch view · optical layers, then the Phase 2 modules</div>
+      <button class="infobtn" id="fwInfo">${IC_INFO} How to read these — framework</button></div>
+    <div class="tabs" style="margin:12px 0 14px;flex-wrap:wrap" id="satTabs">${VIEWS.map((vv,i)=>`<button class="${i===0?'on':''} ${vv.type==='p2'?'p2tab':''}" data-i="${i}">${vv.tab}</button>`).join('')}</div>
+    <div class="grid" style="grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:20px;align-items:start">
+      <div id="satMain"></div><div id="satCap"></div></div></div>`);
+  v.appendChild(viewer);
+  const tabsEl=viewer.querySelectorAll('#satTabs button'), mainEl=viewer.querySelector('#satMain'), capEl=viewer.querySelector('#satCap');
+  function showView(i){const vv=VIEWS[i];
+    tabsEl.forEach((b,j)=>b.classList.toggle('on',j===i));
+    if(vv.type==='opt'){const l=vv.l;
+      mainEl.innerHTML=`<img class="satmain" src="sat/${l.img}" alt="">`;
+      mainEl.querySelector('img').onclick=()=>satLayerModal(l);
+      capEl.innerHTML=`<div class="satname">${l.name}</div><div style="font-size:15px;font-weight:700;color:#26333f;margin:3px 0 9px">${l.q}</div><div class="satshows" style="font-size:12.8px;line-height:1.6">${l.shows}</div>`;
+    } else {const r=vv.r, e=evalSatRule(r);
+      mainEl.innerHTML = r.viz==='insar' ? `<div class="satmain" style="overflow:hidden;cursor:default">${insarSVG(720,300)}</div>` : r.viz==='methane' ? `<div class="satmain" style="overflow:hidden;cursor:default">${methaneSVG(720,300)}</div>` : `<img class="satmain" src="sat/${r.viz}" style="cursor:default" alt="">`;
+      const bt=r.dir==='low_bad'?`≥${r.bands.green} / ${r.bands.amber}–${r.bands.green} / <${r.bands.amber}`:`<${r.bands.green} / ${r.bands.green}–${r.bands.amber} / >${r.bands.amber}`;
+      capEl.innerHTML=`<div class="satname">${r.module} · ${r.obs} <span class="pill green" style="padding:0 6px;font-size:9px"><span class="dot"></span>Activated</span> ${r.illustrative?'<span class="pill grey" style="padding:0 6px;font-size:9px">illustrative</span>':'<span class="pill blue" style="padding:0 6px;font-size:9px">computed</span>'}</div>
+        <div style="font-size:14px;font-weight:700;color:#26333f;margin:4px 0 5px">${e.head}</div>
+        <div class="satshows" style="font-size:12.6px;line-height:1.55">${e.body}</div>
+        <div class="kv" style="margin-top:9px"><span class="k">Source</span><span class="v">${r.src}</span></div>
+        <div class="kv"><span class="k">Bands · feeds</span><span class="v mono" style="font-size:11px">${bt} · ${r.binds}</span></div>
+        <div class="tiny mute" style="margin-top:9px">${r.note ? r.note : (r.illustrative?'Illustrative — needs a Sentinel-1 radar series; the rule, PS-point map and grading are already in place.':'Computed from the supplied bands — the orange flags are the seepage signature on the downstream face.')}</div>
+        <div id="satWf" style="margin-top:10px"></div>`;
+      const wb=h(`<button class="btn ${e.band!=='green'?'sec':'ghost'} sm">⚙ Response workflow ${wfSummary(r.id)}${e.band!=='green'?' · active':''}</button>`);
+      wb.onclick=()=>satWorkflowModal(r.id); capEl.querySelector('#satWf').appendChild(wb);
+    }
+  }
+  tabsEl.forEach((b,i)=>b.onclick=()=>showView(i));
+  showView(0);
+  viewer.querySelector('#fwInfo').onclick=satFrameworkModal;
+
+  // Annotated interpretation + zone explanations
+  const ZONES=[['#e11d48','Pond','The free water (the “supernatant”) that collects at the low end of the facility. It is kept clear of the wall on purpose — its size against the freeboard is the overtopping risk, and a pond drifting toward the wall is the classic failure mechanism.'],
+    ['#111827','Tailings beach','The exposed, settled tailings between the discharge points and the pond. This dried beach is a safety buffer: the wider it is, the further the water sits from the wall. A shrinking beach is a warning.'],
+    ['#2563eb','Discharge zones','Where the tailings slurry is pumped (“spigotted”) onto the facility — the freshest, wettest material. Operators rotate the discharge around the rim to build the beach evenly and steer the pond away from the wall.'],
+    ['#eab308','Embankment','The retaining wall that holds everything back, raised in stages (“lifts”). It must stay dry and stable — a wet embankment is the early sign of seepage, the slow failure mode.'],
+    ['#f97316','Vegetation encroachment','Where plants have taken hold on the tailings surface — a sign that area has been inactive long enough to settle and grow. Not a hazard in itself, but it marks change and can hide the surface from a ground inspection.']];
+  const ann=h(`<div class="card mb"><h2>Annotated interpretation — the zones explained</h2>
+    <div class="tiny mute" style="margin:2px 0 10px">The scene marked up into the parts that matter, each explained in plain language.</div>
+    <div class="grid" style="grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:20px;align-items:start">
+      <img src="sat/annotated.png" style="width:100%;border-radius:10px;display:block;border:1px solid var(--line-2)">
+      <div></div></div></div>`);
+  const zc=ann.querySelector('.grid > div:last-child');
+  ZONES.forEach(([col,name,desc])=>zc.appendChild(h(`<div class="srow" style="align-items:flex-start"><span style="width:13px;height:13px;border-radius:3px;background:${col};flex:none;margin-top:3px;border:1px solid rgba(0,0,0,.15)"></span><div class="grow"><div class="t" style="font-size:12.9px;color:#26333f">${name}</div><div class="s" style="line-height:1.55">${desc}</div></div></div>`)));
+  v.appendChild(ann);
+
+  // Scene metadata + provenance (for the selected pass)
+  v.appendChild(h(`<div class="card mb"><h2>Scene &amp; method</h2>
+    ${[['Facility','Parabola TSF1 (upstream tailings storage facility)'],['Selected pass','Sentinel-2 L2A · '+sc.date+' · '+sc.cloud+'% cloud'],['Update cadence','curated passes supplied at least twice a year'],['Resolution','~9–10 m per pixel · surface reflectance'],['Location','−24.012°, 31.077° (WGS 84)'],['Facility footprint','~980 ha (measured from the imagery)'],['Method','NDWI water · NDVI vegetation · NDMI moisture, computed from the raw bands; areas from pixel counts at the georeferenced scale']].map(([k,val])=>`<div class="kv"><span class="k">${k}</span><span class="v">${val}</span></div>`).join('')}
+    <div class="banner info" style="margin-top:12px">🎚️ Figures are <b>estimates</b> with classification thresholds — a real deployment states an uncertainty band on every number and refuses to publish a scene that fails the cloud / fitness gate. The value is the <b>trend across the supplied passes</b>${sc.hasImg?'':' — imagery for this archived pass would be attached in production; only the latest pass carries images here'}.</div></div>`));
+
+  // Next iteration — fusion with the other streams
+  const fuse=h(`<div class="card mb" style="border-color:rgba(136,189,242,.35)"><div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <div><h2>🔗 Next iteration — fuse this with the other streams</h2>
+      <div class="tiny mute" style="margin-top:2px;max-width:620px">Satellite is one of four eyes. The power is <b>fusion</b>: the satellite flags where to look, the drone gets it at centimetres, the sensors confirm it continuously, and the inspector judges what it means — each corroborating the others so no single view drives a decision alone.</div></div></div>
+    <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:10px">
+      ${[['🛰️','Satellite','pond, beach, moisture, vegetation — every ~5 days, whole-facility'],['🚁','Drone','centimetre DEM on the spot the satellite flagged'],['📡','Sensors','continuous phreatic / movement / flow at the point'],['📝','Manual','the trained eye that interprets and decides']].map(([ic,t,s])=>`<div style="flex:1;min-width:150px;border:1px solid var(--line-2);border-radius:10px;padding:10px 12px"><div class="t" style="font-size:12.6px;color:#26333f">${ic} ${t}</div><div class="s tiny mute" style="margin-top:3px">${s}</div></div>`).join('')}</div>
+    <div style="margin-top:12px"><button class="btn sec sm" id="fuse2cov">See the fusion coverage matrix →</button></div></div>`);
+  v.appendChild(fuse);
+  fuse.querySelector('#fuse2cov').onclick=()=>{state.view='inspections'; inspTab='overview'; covView='coverage'; render();};
 
   const plan=[
     ['🛰️','Scene tasking & AOI control','Configure the bounding box, MGRS tile and acquisition cadence; request priority tasking.','planned'],
     ['☁️','Cloud & fitness screening','Per-scene cloud %, exposed-sandbank and fitness-gate rules, with a withheld-scene audit trail.','partial'],
     ['🎚️','Site calibration workflow','NDWI / NIR derivation, validation imagery and residual-error tracking as audit evidence.','partial'],
     ['📐','M05 analytics pipeline','Pond area, beach and freeboard with uncertainty — the numbers that publish to Water & freeboard.','partial'],
-    ['📡','InSAR ground deformation','Sentinel-1 radar for mm-scale wall displacement between optical passes.','phase2:M04'],
-    ['🌿','Vegetation & chemical seepage','Red-edge / SWIR seepage analytics on the downstream face.','phase2:M06'],
+    ['📡','InSAR ground deformation','Sentinel-1 radar for mm-scale wall displacement between optical passes.','active:M04'],
+    ['🌿','Vegetation & chemical seepage','Red-edge / SWIR seepage analytics on the downstream face.','active:M06'],
   ];
-  const pc=h(`<div class="card"><h2>Planned build-out</h2><div class="tiny mute" style="margin:2px 0 8px">What the full Satellite operations page will contain. Items marked Phase 2 are defined slots in the Roadmap; “partial today” already runs behind Water & freeboard.</div></div>`);
+  const pc=h(`<div class="card"><h2>Build-out status</h2><div class="tiny mute" style="margin:2px 0 8px">Where each satellite capability stands. “Partial today” runs behind Water & freeboard; the two Phase-2 modules are now <b>executed</b> and feeding the coverage matrix.</div></div>`);
   plan.forEach(([ic,t,s,st])=>{
-    const isP2=st.indexOf('phase2:')===0, mid=isP2?st.split(':')[1]:null;
-    const pill=st==='planned'?'<span class="pill grey">Planned</span>':st==='partial'?'<span class="pill amber"><span class="dot"></span>Partial today</span>':`<button class="pill blue p2j" data-m="${mid}" style="border:none;cursor:pointer">Phase 2 · ${mid} ↗</button>`;
+    const isP2=st.indexOf('phase2:')===0, isAct=st.indexOf('active:')===0, mid=(isP2||isAct)?st.split(':')[1]:null;
+    const pill=st==='planned'?'<span class="pill grey">Planned</span>':st==='partial'?'<span class="pill amber"><span class="dot"></span>Partial today</span>':isAct?`<button class="pill green p2j" data-m="${mid}" style="border:none;cursor:pointer"><span class="dot"></span>Activated · ${mid} ↗</button>`:`<button class="pill blue p2j" data-m="${mid}" style="border:none;cursor:pointer">Phase 2 · ${mid} ↗</button>`;
     const row=h(`<div class="srow"><span style="font-size:16px;width:24px;text-align:center">${ic}</span><div class="grow"><div class="t" style="font-size:13px">${t}</div><div class="s">${s}</div></div>${pill}</div>`);
     const jb=row.querySelector('.p2j'); if(jb)jb.onclick=()=>phase2Modal(jb.dataset.m);
     pc.appendChild(row);
